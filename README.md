@@ -1,4 +1,4 @@
-# trading-app
+# Trading Application
 
 ### Overview
 A full-stack paper-trading application that allows users to deposit virtual cash, place simulated market orders using real market data, and track portfolio holdings, account value, and profit/loss over time.
