@@ -1,0 +1,41 @@
+2026-04-25
+    [ ] create login request/response schemas
+    [ ] add a small password hashing helper
+    [ ] use the helper in register
+    [ ] create /auth/login endpoint
+    [ ] return 401 when email is not found
+    [ ] return 401 when password is wrong
+    [ ] return a simple success response when login works
+    [ ] manually test login in /docs
+    [ ] add tests for login success, missing email, and wrong password
+
+complete
+    [x] create directories frontend/backend
+    [x] install sqlalchemy, fastapi, etc
+    [x] virtual environment, configure vscode, etc
+    [x] get fastapi working with /health endpoint
+    [x] db.py connection
+    [x] models.py from readme
+    [x] db session variable
+    [x] fix backend/main.py so the app starts
+    [x] create request/response schemas for register
+    [x] create /auth/register endpoint
+    [x] handle duplicate emails
+    [x] add small email/password validation
+    [x] manually test creating one user
+    [x] verify user creates in database
+    [x] write basic register tests
+    [x] test duplicate email
+    [x] test short password
+    [x] commit registration endpoint
+
+---
+
+deferred
+    [ ] rename password column to password_hash
+    [ ] switch sha256 to bcrypt/passlib
+    [ ] add jwt access tokens for login
+    [ ] add /auth/me endpoint
+    [ ] add dependency for current logged-in user
+    [ ] move table creation out of main import
+    [ ] add github actions for tests
