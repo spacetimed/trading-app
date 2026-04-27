@@ -1,5 +1,16 @@
 2026-04-26
 
+next
+    [ ] run register/login tests once
+    [ ] stage renamed test file correctly
+    [ ] commit login endpoint and tests
+    [ ] install or confirm jwt dependency
+    [ ] add access token response schema
+    [ ] make /auth/login return a token
+    [ ] add /auth/me endpoint
+    [ ] add one /auth/me test
+    [ ] manually test register -> login -> me in /docs
+
 complete
     [x] create login request/response schemas
     [x] add a small password hashing helper
@@ -34,8 +45,8 @@ complete
 deferred
     [ ] rename password column to password_hash
     [ ] switch sha256 to bcrypt/passlib
-    [ ] add jwt access tokens for login
-    [ ] add /auth/me endpoint
     [ ] add dependency for current logged-in user
     [ ] move table creation out of main import
     [ ] add github actions for tests
+    [ ] start account deposit endpoint
+    [ ] start account withdraw endpoint

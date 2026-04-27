@@ -1,84 +1,156 @@
 # Trading Application
 
-### Overview
-A full-stack paper-trading application that allows users to deposit virtual cash, place simulated market orders using real market data, and track portfolio holdings, account value, and profit/loss over time.
+A full-stack paper-trading app for practicing stock trading with virtual cash. Users will be able to create an account, manage a cash balance, place simulated market orders using real quote data, and track their portfolio, trade history, account value, and profit/loss over time.
 
-### Scope for MVP
-Users can:
-- Register/login
-- Deposit/withdraw virtual cash
-- Stock lookup and view price
-- Place simulated market buy/sell orders
-- View summary: trade history, cash balance, positions, PnL
+This is intended as an MVP first, with the backend logic built out before adding more polished frontend and deployment work.
 
-Frontend
-- Login/register pages — authentication flow 
-- Dashboard page — supports all summary features above, poll live prices
-- Forms — deposit, withdraw, buy, and sell
+## MVP Scope
 
-Backend:
-- REST endpoints
-- Validates inputs and requests
-- Applies trading and account rules (sufficient cash, etc.)
-- Fetch and cache real market data (Redis)
-- Update database on actions (buy/sell/deposit)
+Users should be able to:
 
-Tests
-- deposit increases cash
-- withdraw decreases cash
-- can’t over-withdraw
-- buy works with enough cash    
-- buy fails without enough cash
-- sell works if shares owned
-- sell fails if not enough shares
+- register and log in
+- deposit and withdraw virtual cash
+- look up a stock symbol and view a current price
+- place simulated market buy and sell orders
+- view cash balance, positions, trade history, and PnL
 
-Data
-- Real stock-market quote API
-- Polling-based updates for MVP; websockets maybe
+## Planned Stack
 
-Database
-- Schemas: Users, Transactions, Trades, Positions
-- Users
-	- id, email, password, created_at
-- Transactions (cash in/out)
-	- id, user_id, type (deposit|withdraw), amount
-- Trades
-	- id, user_id, symbol, side (buy|sell), quantity, price
-- Positions
-	- id, user_id, symbol, quantity, avg_cost
-
-### Architecture
 - Frontend: React, TypeScript, Vite
 - Backend: FastAPI
 - Database: PostgreSQL
-- Cache: Redis
+- Cache: Redis for quote caching
 - Auth: JWT-based authentication
-- Deployment: Docker, AWS 
-### API
-- POST /auth/register
-- POST /auth/login
-- GET /auth/me
-- POST /account/deposit
-- POST /account/withdraw
-- GET /account/summary
-- GET /market/quote/{symbol}
-- POST /orders/buy
-- POST /orders/sell
-- GET /portfolio
-- GET /trades
+- Deployment: Docker, AWS
 
-### Build order (tentative) 
-- [ ] Create repository, clone locally
-- [ ] Create rough project structure (frontend/ and backend/)
-- [ ] Setup backend (FastAPI running)
-- [ ] Setup PostgreSQL and connect DB
-- [ ] Add /health endpoint
-- [ ] Setup database schema (User, Transaction, Trade, Position)
-- [ ] Implement auth endpoints (register, login, /me)
+## Frontend
+
+Planned screens and flows:
+
+- login/register pages for authentication
+- dashboard for account summary, positions, trade history, and PnL
+- forms for deposit, withdraw, buy, and sell actions
+- polling-based price updates for the MVP
+
+## Backend
+
+The backend will expose REST endpoints and handle the main application rules:
+
+- validate request bodies and user input
+- create and authenticate users
+- apply account rules, such as sufficient cash for buys
+- apply position rules, such as sufficient shares for sells
+- fetch real market quote data
+- cache quote data where useful
+- write account, trade, and position changes to the database
+
+## Data Model
+
+Initial database tables:
+
+### Users
+
+- id
+- email
+- password
+- created_at
+
+### Transactions
+
+Cash deposits and withdrawals.
+
+- id
+- user_id
+- type: deposit or withdraw
+- amount
+
+### Trades
+
+Executed simulated orders.
+
+- id
+- user_id
+- symbol
+- side: buy or sell
+- quantity
+- price
+
+### Positions
+
+Current holdings per user and symbol.
+
+- id
+- user_id
+- symbol
+- quantity
+- avg_cost
+
+## API Plan
+
+Auth:
+
+- POST `/auth/register`
+- POST `/auth/login`
+- GET `/auth/me`
+
+Account:
+
+- POST `/account/deposit`
+- POST `/account/withdraw`
+- GET `/account/summary`
+
+Market:
+
+- GET `/market/quote/{symbol}`
+
+Orders and portfolio:
+
+- POST `/orders/buy`
+- POST `/orders/sell`
+- GET `/portfolio`
+- GET `/trades`
+
+## Test Plan
+
+Core backend behavior to test:
+
+- deposit increases cash
+- withdraw decreases cash
+- users cannot over-withdraw
+- buy works when the user has enough cash
+- buy fails when the user does not have enough cash
+- sell works when the user owns enough shares
+- sell fails when the user does not own enough shares
+
+Auth tests:
+
+- register creates a user
+- duplicate email is rejected
+- short password is rejected
+- login succeeds with valid credentials
+- login fails with a missing email
+- login fails with the wrong password
+
+## Build Order
+
+- [x] Create repository and local project structure
+- [x] Set up backend directory
+- [x] Set up FastAPI with `/health`
+- [x] Connect PostgreSQL through SQLAlchemy
+- [x] Add initial database models
+- [x] Implement `/auth/register`
+- [x] Add basic register tests
+- [x] Implement `/auth/login`
+- [x] Add basic login tests
+- [ ] Add JWT access tokens
+- [ ] Add `/auth/me`
 - [ ] Implement deposit and withdraw endpoints
-- [ ] Integrate market data API + quote endpoint
+- [ ] Integrate market data API and quote endpoint
 - [ ] Implement buy and sell endpoints
-- [ ] Implement portfolio and trades endpoints 
-- [ ] Create tests alongside endpoints
+- [ ] Implement portfolio and trades endpoints
+- [ ] Build frontend login/register flow
+- [ ] Build dashboard and trading forms
 
-(incomplete)
+## Notes
+
+The current focus is getting the backend behavior correct in small pieces. Some implementation details are intentionally simple for now and should be revisited later, especially password hashing, token handling, migrations, and deployment.
