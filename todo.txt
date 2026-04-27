@@ -1,15 +1,15 @@
-2026-04-25
-    [ ] create login request/response schemas
-    [ ] add a small password hashing helper
-    [ ] use the helper in register
-    [ ] create /auth/login endpoint
-    [ ] return 401 when email is not found
-    [ ] return 401 when password is wrong
-    [ ] return a simple success response when login works
-    [ ] manually test login in /docs
-    [ ] add tests for login success, missing email, and wrong password
+2026-04-26
 
 complete
+    [x] create login request/response schemas
+    [x] add a small password hashing helper
+    [x] use the helper in register
+    [x] create /auth/login endpoint
+    [x] return 401 when email is not found
+    [x] return 401 when password is wrong
+    [x] return a simple success response when login works
+    [x] manually test login in /docs
+    [x] add tests for login success, missing email, and wrong password
     [x] create directories frontend/backend
     [x] install sqlalchemy, fastapi, etc
     [x] virtual environment, configure vscode, etc
