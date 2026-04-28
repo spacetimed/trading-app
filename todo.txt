@@ -1,17 +1,26 @@
-2026-04-26
+2026-04-27
 
 next
-    [ ] run register/login tests once
-    [ ] stage renamed test file correctly
-    [ ] commit login endpoint and tests
-    [ ] install or confirm jwt dependency
-    [ ] add access token response schema
-    [ ] make /auth/login return a token
-    [ ] add /auth/me endpoint
-    [ ] add one /auth/me test
-    [ ] manually test register -> login -> me in /docs
+    [ ] decide where cash balance should live
+    [ ] add cash balance field to user model
+    [ ] create deposit request/response schemas
+    [ ] create /account/deposit endpoint
+    [ ] require auth token for deposit
+    [ ] increase current user's cash balance on deposit
+    [ ] create transaction row for deposit
+    [ ] manually test login -> deposit in /docs
+    [ ] add deposit increases cash test
 
 complete
+    [x] run register/login tests once
+    [x] stage renamed test file correctly
+    [x] commit login endpoint and tests
+    [x] install or confirm jwt dependency
+    [x] add access token response schema
+    [x] make /auth/login return a token
+    [x] add /auth/me endpoint
+    [x] add one /auth/me test
+    [x] manually test register -> login -> me in /docs
     [x] create login request/response schemas
     [x] add a small password hashing helper
     [x] use the helper in register
@@ -45,8 +54,7 @@ complete
 deferred
     [ ] rename password column to password_hash
     [ ] switch sha256 to bcrypt/passlib
-    [ ] add dependency for current logged-in user
+    [ ] extract reusable current user dependency
     [ ] move table creation out of main import
     [ ] add github actions for tests
-    [ ] start account deposit endpoint
     [ ] start account withdraw endpoint

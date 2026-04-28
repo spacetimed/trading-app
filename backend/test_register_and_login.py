@@ -15,12 +15,19 @@ sys.path.insert(0, os.path.dirname(__file__))
 original_create_all = MetaData.create_all
 MetaData.create_all = lambda self, bind=None, tables=None, checkfirst=True: None
 try:
-    from main import login, register
+    from main import ALGORITHM, SECRET_KEY, login, me, register
 finally:
     MetaData.create_all = original_create_all
 
+import jwt
+
 from models import Base
 from schemas import LoginPayload, RegisterPayload
+
+
+class TestCredentials:
+    def __init__(self, token):
+        self.credentials = token
 
 
 # use an in-memory sqlite db for tests
@@ -70,12 +77,17 @@ class RegisterAndLoginTests(unittest.TestCase):
             password="testtest",
         )
 
-        user = register(register_payload, self.db)
+        register(register_payload, self.db)
         response = login(login_payload, self.db)
+        token_payload = jwt.decode(
+            response["token"],
+            SECRET_KEY,
+            algorithms=[ALGORITHM],
+        )
 
-        self.assertEqual(response["id"], user.id)
-        self.assertEqual(response["email"], "user@example.com")
-        self.assertEqual(response["message"], "login successful")
+        self.assertIn("token", response)
+        self.assertEqual(response["token_type"], "bearer")
+        self.assertEqual(token_payload["sub"], "user@example.com")
 
     def test_login_rejects_missing_email(self):
         # no user has been registered in this fresh db
@@ -104,6 +116,25 @@ class RegisterAndLoginTests(unittest.TestCase):
 
         self.assertEqual(context.exception.status_code, 401)
         self.assertEqual(context.exception.detail, "incorrect email or password")
+
+    def test_me_returns_current_user_from_token(self):
+        register_payload = RegisterPayload(
+            email="user@example.com",
+            password="testtest",
+        )
+        login_payload = LoginPayload(
+            email="user@example.com",
+            password="testtest",
+        )
+
+        user = register(register_payload, self.db)
+        login_response = login(login_payload, self.db)
+        credentials = TestCredentials(login_response["token"])
+        current_user = me(credentials, self.db)
+
+        self.assertEqual(current_user.id, user.id)
+        self.assertEqual(current_user.email, "user@example.com")
+
 
 
 if __name__ == "__main__":

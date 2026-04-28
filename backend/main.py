@@ -3,11 +3,18 @@ from db import engine, get_db
 
 from models import Base, User
 from schemas import RegisterPayload, RegisterResponse, \
-                    LoginPayload, LoginResponse
+                    LoginPayload, LoginResponse, \
+                    TokenResponse
 
 from sqlalchemy.orm import Session
 
 import hashlib
+
+from datetime import datetime, timedelta, timezone
+
+import jwt
+from jwt import InvalidTokenError
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
 app = FastAPI()
 
@@ -42,7 +49,7 @@ def register(payload: RegisterPayload, db: Session = Depends(get_db)):
     # return the created user
     return user
 
-@app.post("/auth/login", response_model=LoginResponse)
+@app.post("/auth/login", response_model=TokenResponse)
 def login(payload: LoginPayload, db: Session = Depends(get_db)):
     # check if credentials match
     hashed_password = hash_password(payload.password)
@@ -54,15 +61,54 @@ def login(payload: LoginPayload, db: Session = Depends(get_db)):
     if not valid_user:
         raise HTTPException(status_code=401, detail="incorrect email or password")
 
-    # craft response
+    access_token = create_access_token({"sub": valid_user.email})
     return {
-        "id": valid_user.id,
-        "email": valid_user.email,
-        "message": "login successful",
+        "token": access_token,
+        "token_type": "bearer"
     }
+
+security = HTTPBearer()
+
+@app.get("/auth/me", response_model=RegisterResponse)
+def me(
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+    db: Session = Depends(get_db),
+):
+    token = credentials.credentials
+
+    # check token basic validity
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        email = payload.get("sub")
+    except InvalidTokenError:
+        raise HTTPException(status_code=401, detail="invalid token")
+
+    # check email key exists
+    if not email:
+        raise HTTPException(status_code=401, detail="invalid token")
+
+    # check valid user
+    user = db.query(User).filter(User.email == email).first()
+
+    if not user:
+        raise HTTPException(status_code=401, detail="invalid token")
+
+    return user
 
 
 # helpers
+
 def hash_password(password: str) -> str:
     """return a hashed sha256-representation of the plaintext password"""
     return hashlib.sha256(password.encode('utf-8')).hexdigest()
+
+
+SECRET_KEY = "dev-key-i-will-change-this-later-lol"
+ALGORITHM = "HS256"
+TOKEN_EXPIRE_MINS = 30
+
+def create_access_token(data: dict) -> str:
+    expire_time = datetime.now(timezone.utc) + timedelta(minutes=TOKEN_EXPIRE_MINS)
+    data = data.copy()
+    data.update({"exp": expire_time})
+    return jwt.encode(data, SECRET_KEY, algorithm=ALGORITHM)

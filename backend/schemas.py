@@ -25,3 +25,7 @@ class LoginResponse(BaseModel):
     message: str
 
     model_config = ConfigDict(from_attributes=True) # mold input to model based off matching fields
+
+class TokenResponse(BaseModel): 
+    token: str
+    token_type: str
