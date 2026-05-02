@@ -1,9 +1,10 @@
 from fastapi import FastAPI, Depends, HTTPException
 from db import engine, get_db
 
-from models import Base, User
+from models import Base, User, Transaction
 from schemas import RegisterPayload, RegisterResponse, \
                     LoginPayload, LoginResponse, \
+                    DepositPayload, DepositResponse, \
                     TokenResponse
 
 from sqlalchemy.orm import Session
@@ -20,13 +21,66 @@ app = FastAPI()
 
 Base.metadata.create_all(bind=engine)
 
+# helpers
+
+def hash_password(password: str) -> str:
+    """return a hashed sha256-representation of the plaintext password"""
+    return hashlib.sha256(password.encode('utf-8')).hexdigest()
+
+
+SECRET_KEY = "dev-key-i-will-change-this-later-lol"
+ALGORITHM = "HS256"
+TOKEN_EXPIRE_MINS = 30
+
+def create_access_token(data: dict) -> str:
+    expire_time = datetime.now(timezone.utc) + timedelta(minutes=TOKEN_EXPIRE_MINS)
+    data = data.copy()
+    data.update({"exp": expire_time})
+    return jwt.encode(data, SECRET_KEY, algorithm=ALGORITHM)
+
+
+security = HTTPBearer()
+
+def get_current_user(
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+    db: Session = Depends(get_db),
+):
+    """return a logged in user model from a token"""
+    token = credentials.credentials
+
+    # check token basic validity
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        email = payload.get("sub")
+    except InvalidTokenError:
+        raise HTTPException(status_code=401, detail="invalid token")
+
+    # check email key exists
+    if not email:
+        raise HTTPException(status_code=401, detail="invalid token")
+
+    # check valid user
+    user = db.query(User).filter(User.email == email).first()
+
+    if not user:
+        raise HTTPException(status_code=401, detail="invalid token")
+
+    return user
+
+# end helpers 
+
+
+# endpoints
+
 @app.get("/health")
 def health(): 
     return {"status":"ok"}
 
+
 @app.get("/db-test")
 def db_check(db: Session = Depends(get_db)):
     return {"ok": True}
+
 
 @app.post("/auth/register", response_model=RegisterResponse)
 def register(payload: RegisterPayload, db: Session = Depends(get_db)):
@@ -49,6 +103,7 @@ def register(payload: RegisterPayload, db: Session = Depends(get_db)):
     # return the created user
     return user
 
+
 @app.post("/auth/login", response_model=TokenResponse)
 def login(payload: LoginPayload, db: Session = Depends(get_db)):
     # check if credentials match
@@ -67,48 +122,30 @@ def login(payload: LoginPayload, db: Session = Depends(get_db)):
         "token_type": "bearer"
     }
 
-security = HTTPBearer()
 
 @app.get("/auth/me", response_model=RegisterResponse)
-def me(
-    credentials: HTTPAuthorizationCredentials = Depends(security),
-    db: Session = Depends(get_db),
+def me(current_user: User = Depends(get_current_user)):
+    return current_user
+
+
+@app.post("/account/deposit", response_model=DepositResponse)
+def deposit(
+    payload: DepositPayload,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
 ):
-    token = credentials.credentials
+    current_user.cash_balance += payload.amount
 
-    # check token basic validity
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        email = payload.get("sub")
-    except InvalidTokenError:
-        raise HTTPException(status_code=401, detail="invalid token")
+    txn = Transaction(
+        user_id=current_user.id,
+        type="deposit",
+        amount=payload.amount
+    )
 
-    # check email key exists
-    if not email:
-        raise HTTPException(status_code=401, detail="invalid token")
+    db.add(txn)
+    db.commit()
+    db.refresh(current_user)
 
-    # check valid user
-    user = db.query(User).filter(User.email == email).first()
+    return {"cash_balance": current_user.cash_balance}
 
-    if not user:
-        raise HTTPException(status_code=401, detail="invalid token")
-
-    return user
-
-
-# helpers
-
-def hash_password(password: str) -> str:
-    """return a hashed sha256-representation of the plaintext password"""
-    return hashlib.sha256(password.encode('utf-8')).hexdigest()
-
-
-SECRET_KEY = "dev-key-i-will-change-this-later-lol"
-ALGORITHM = "HS256"
-TOKEN_EXPIRE_MINS = 30
-
-def create_access_token(data: dict) -> str:
-    expire_time = datetime.now(timezone.utc) + timedelta(minutes=TOKEN_EXPIRE_MINS)
-    data = data.copy()
-    data.update({"exp": expire_time})
-    return jwt.encode(data, SECRET_KEY, algorithm=ALGORITHM)
+# end endpoints

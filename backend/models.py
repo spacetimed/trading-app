@@ -11,6 +11,7 @@ class User(Base):
     email = Column(String, unique=True, nullable=False, index=True)
     password = Column(String, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
+    cash_balance = Column(Numeric(12, 2), nullable=False, default=0)
 
 
 class Transaction(Base):

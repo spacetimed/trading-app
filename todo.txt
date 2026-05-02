@@ -1,17 +1,27 @@
 2026-04-27
 
 next
-    [ ] decide where cash balance should live
-    [ ] add cash balance field to user model
-    [ ] create deposit request/response schemas
-    [ ] create /account/deposit endpoint
-    [ ] require auth token for deposit
-    [ ] increase current user's cash balance on deposit
-    [ ] create transaction row for deposit
-    [ ] manually test login -> deposit in /docs
-    [ ] add deposit increases cash test
+    [ ] create withdraw request/response schemas
+    [ ] create /account/withdraw endpoint
+    [ ] require auth token for withdraw
+    [ ] reject withdraw amount greater than cash balance
+    [ ] decrease current user's cash balance on withdraw
+    [ ] create transaction row for withdraw
+    [ ] manually test login -> deposit -> withdraw in /docs
+    [ ] add withdraw decreases cash test
+    [ ] add over-withdraw fails test
+    [ ] add negative withdraw amount fails test
 
 complete
+    [x] decide where cash balance should live
+    [x] add cash balance field to user model
+    [x] create deposit request/response schemas
+    [x] create /account/deposit endpoint
+    [x] require auth token for deposit
+    [x] increase current user's cash balance on deposit
+    [x] create transaction row for deposit
+    [x] manually test login -> deposit in /docs
+    [x] add deposit increases cash test
     [x] run register/login tests once
     [x] stage renamed test file correctly
     [x] commit login endpoint and tests
@@ -54,7 +64,7 @@ complete
 deferred
     [ ] rename password column to password_hash
     [ ] switch sha256 to bcrypt/passlib
-    [ ] extract reusable current user dependency
+    [x] extract reusable current user dependency
     [ ] move table creation out of main import
     [ ] add github actions for tests
-    [ ] start account withdraw endpoint
+    [ ] add account summary endpoint

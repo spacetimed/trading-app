@@ -2,6 +2,8 @@ from pydantic import BaseModel, EmailStr, Field, ConfigDict
 
 from datetime import datetime
 
+from decimal import Decimal
+
 # register models
 class RegisterPayload(BaseModel):
     email: EmailStr
@@ -29,3 +31,9 @@ class LoginResponse(BaseModel):
 class TokenResponse(BaseModel): 
     token: str
     token_type: str
+
+class DepositPayload(BaseModel):
+    amount: Decimal = Field(gt=0)
+
+class DepositResponse(BaseModel):
+    cash_balance: Decimal

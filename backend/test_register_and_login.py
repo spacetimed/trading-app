@@ -15,7 +15,7 @@ sys.path.insert(0, os.path.dirname(__file__))
 original_create_all = MetaData.create_all
 MetaData.create_all = lambda self, bind=None, tables=None, checkfirst=True: None
 try:
-    from main import ALGORITHM, SECRET_KEY, login, me, register
+    from main import ALGORITHM, SECRET_KEY, get_current_user, login, me, register
 finally:
     MetaData.create_all = original_create_all
 
@@ -130,10 +130,11 @@ class RegisterAndLoginTests(unittest.TestCase):
         user = register(register_payload, self.db)
         login_response = login(login_payload, self.db)
         credentials = TestCredentials(login_response["token"])
-        current_user = me(credentials, self.db)
+        current_user = get_current_user(credentials, self.db)
+        response = me(current_user)
 
-        self.assertEqual(current_user.id, user.id)
-        self.assertEqual(current_user.email, "user@example.com")
+        self.assertEqual(response.id, user.id)
+        self.assertEqual(response.email, "user@example.com")
 
 
 
