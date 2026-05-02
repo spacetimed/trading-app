@@ -1,27 +1,30 @@
-from fastapi import FastAPI, Depends, HTTPException
-from db import engine, get_db
-
-from models import Base, User, Transaction
-from schemas import RegisterPayload, RegisterResponse, \
-                    LoginPayload, LoginResponse, \
-                    DepositPayload, DepositResponse, \
-                    TokenResponse
-
-from sqlalchemy.orm import Session
-
+from datetime import datetime, timedelta, timezone
 import hashlib
 
-from datetime import datetime, timedelta, timezone
-
 import jwt
+from fastapi import Depends, FastAPI, HTTPException
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jwt import InvalidTokenError
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from sqlalchemy.orm import Session
+
+from db import engine, get_db
+from models import Base, Transaction, User
+from schemas import (
+    DepositPayload,
+    DepositResponse,
+    LoginPayload,
+    RegisterPayload,
+    RegisterResponse,
+    TokenResponse,
+    WithdrawPayload,
+    WithdrawResponse,
+)
+
 
 app = FastAPI()
 
 Base.metadata.create_all(bind=engine)
 
-# helpers
 
 def hash_password(password: str) -> str:
     """return a hashed sha256-representation of the plaintext password"""
@@ -32,6 +35,7 @@ SECRET_KEY = "dev-key-i-will-change-this-later-lol"
 ALGORITHM = "HS256"
 TOKEN_EXPIRE_MINS = 30
 
+
 def create_access_token(data: dict) -> str:
     expire_time = datetime.now(timezone.utc) + timedelta(minutes=TOKEN_EXPIRE_MINS)
     data = data.copy()
@@ -40,6 +44,7 @@ def create_access_token(data: dict) -> str:
 
 
 security = HTTPBearer()
+
 
 def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(security),
@@ -67,14 +72,10 @@ def get_current_user(
 
     return user
 
-# end helpers 
-
-
-# endpoints
 
 @app.get("/health")
-def health(): 
-    return {"status":"ok"}
+def health():
+    return {"status": "ok"}
 
 
 @app.get("/db-test")
@@ -94,7 +95,7 @@ def register(payload: RegisterPayload, db: Session = Depends(get_db)):
     hashed_password = hash_password(payload.password)
     user = User(
         email=payload.email,
-        password=hashed_password
+        password=hashed_password,
     )
     db.add(user)
     db.commit()
@@ -119,7 +120,7 @@ def login(payload: LoginPayload, db: Session = Depends(get_db)):
     access_token = create_access_token({"sub": valid_user.email})
     return {
         "token": access_token,
-        "token_type": "bearer"
+        "token_type": "bearer",
     }
 
 
@@ -132,14 +133,14 @@ def me(current_user: User = Depends(get_current_user)):
 def deposit(
     payload: DepositPayload,
     current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     current_user.cash_balance += payload.amount
 
     txn = Transaction(
         user_id=current_user.id,
         type="deposit",
-        amount=payload.amount
+        amount=payload.amount,
     )
 
     db.add(txn)
@@ -148,4 +149,26 @@ def deposit(
 
     return {"cash_balance": current_user.cash_balance}
 
-# end endpoints
+
+@app.post("/account/withdraw", response_model=WithdrawResponse)
+def withdraw(
+    payload: WithdrawPayload,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    if payload.amount > current_user.cash_balance:
+        raise HTTPException(status_code=400, detail="insufficient cash")
+
+    current_user.cash_balance -= payload.amount
+
+    txn = Transaction(
+        user_id=current_user.id,
+        type="withdraw",
+        amount=payload.amount,
+    )
+
+    db.add(txn)
+    db.commit()
+    db.refresh(current_user)
+
+    return {"cash_balance": current_user.cash_balance}

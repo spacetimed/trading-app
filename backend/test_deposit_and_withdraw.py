@@ -3,6 +3,7 @@ import sys
 import unittest
 from decimal import Decimal
 
+from fastapi import HTTPException
 from pydantic import ValidationError
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -15,12 +16,12 @@ sys.path.insert(0, os.path.dirname(__file__))
 original_create_all = MetaData.create_all
 MetaData.create_all = lambda self, bind=None, tables=None, checkfirst=True: None
 try:
-    from main import deposit, register
+    from main import deposit, register, withdraw
 finally:
     MetaData.create_all = original_create_all
 
 from models import Base, Transaction
-from schemas import DepositPayload, RegisterPayload
+from schemas import DepositPayload, RegisterPayload, WithdrawPayload
 
 
 engine = create_engine(
@@ -31,7 +32,7 @@ engine = create_engine(
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
-class DepositTests(unittest.TestCase):
+class DepositAndWithdrawTests(unittest.TestCase):
     def setUp(self):
         Base.metadata.drop_all(bind=engine)
         Base.metadata.create_all(bind=engine)
@@ -62,6 +63,43 @@ class DepositTests(unittest.TestCase):
     def test_deposit_rejects_negative_amount(self):
         with self.assertRaises(ValidationError):
             DepositPayload(amount=Decimal("-1.00"))
+
+    def test_withdraw_decreases_cash_and_creates_transaction(self):
+        user = register(
+            RegisterPayload(email="user@example.com", password="testtest"),
+            self.db,
+        )
+        deposit(DepositPayload(amount=Decimal("100.00")), user, self.db)
+
+        response = withdraw(
+            WithdrawPayload(amount=Decimal("25.00")),
+            user,
+            self.db,
+        )
+        transaction = self.db.query(Transaction).filter(
+            Transaction.type == "withdraw"
+        ).first()
+
+        self.assertEqual(response["cash_balance"], Decimal("75.00"))
+        self.assertEqual(user.cash_balance, Decimal("75.00"))
+        self.assertEqual(transaction.user_id, user.id)
+        self.assertEqual(transaction.amount, Decimal("25.00"))
+
+    def test_withdraw_rejects_insufficient_cash(self):
+        user = register(
+            RegisterPayload(email="user@example.com", password="testtest"),
+            self.db,
+        )
+
+        with self.assertRaises(HTTPException) as context:
+            withdraw(WithdrawPayload(amount=Decimal("25.00")), user, self.db)
+
+        self.assertEqual(context.exception.status_code, 400)
+        self.assertEqual(context.exception.detail, "insufficient cash")
+
+    def test_withdraw_rejects_negative_amount(self):
+        with self.assertRaises(ValidationError):
+            WithdrawPayload(amount=Decimal("-1.00"))
 
 
 if __name__ == "__main__":

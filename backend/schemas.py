@@ -21,13 +21,6 @@ class LoginPayload(BaseModel):
     email: EmailStr
     password: str
 
-class LoginResponse(BaseModel):
-    id: int
-    email: EmailStr
-    message: str
-
-    model_config = ConfigDict(from_attributes=True) # mold input to model based off matching fields
-
 class TokenResponse(BaseModel): 
     token: str
     token_type: str
@@ -36,4 +29,10 @@ class DepositPayload(BaseModel):
     amount: Decimal = Field(gt=0)
 
 class DepositResponse(BaseModel):
+    cash_balance: Decimal
+
+class WithdrawPayload(BaseModel):
+    amount: Decimal = Field(gt=0)
+
+class WithdrawResponse(BaseModel):
     cash_balance: Decimal

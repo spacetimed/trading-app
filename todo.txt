@@ -1,18 +1,27 @@
-2026-04-27
+2026-05-02
 
 next
-    [ ] create withdraw request/response schemas
-    [ ] create /account/withdraw endpoint
-    [ ] require auth token for withdraw
-    [ ] reject withdraw amount greater than cash balance
-    [ ] decrease current user's cash balance on withdraw
-    [ ] create transaction row for withdraw
-    [ ] manually test login -> deposit -> withdraw in /docs
-    [ ] add withdraw decreases cash test
-    [ ] add over-withdraw fails test
-    [ ] add negative withdraw amount fails test
+    [ ] create account summary response schema
+    [ ] create /account/summary endpoint
+    [ ] require auth token for account summary
+    [ ] return current cash balance
+    [ ] return total deposits amount
+    [ ] return total withdrawals amount
+    [ ] return transaction count
+    [ ] manually test login -> deposit -> withdraw -> summary in /docs
+    [ ] add account summary test
 
 complete
+    [x] create withdraw request/response schemas
+    [x] create /account/withdraw endpoint
+    [x] require auth token for withdraw
+    [x] reject withdraw amount greater than cash balance
+    [x] decrease current user's cash balance on withdraw
+    [x] create transaction row for withdraw
+    [x] manually test login -> deposit -> withdraw in /docs
+    [x] add withdraw decreases cash test
+    [x] add over-withdraw fails test
+    [x] add negative withdraw amount fails test
     [x] decide where cash balance should live
     [x] add cash balance field to user model
     [x] create deposit request/response schemas
@@ -67,4 +76,4 @@ deferred
     [x] extract reusable current user dependency
     [ ] move table creation out of main import
     [ ] add github actions for tests
-    [ ] add account summary endpoint
+    [ ] start market quote endpoint
