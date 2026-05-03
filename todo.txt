@@ -1,17 +1,26 @@
 2026-05-02
 
 next
-    [ ] create account summary response schema
-    [ ] create /account/summary endpoint
-    [ ] require auth token for account summary
-    [ ] return current cash balance
-    [ ] return total deposits amount
-    [ ] return total withdrawals amount
-    [ ] return transaction count
-    [ ] manually test login -> deposit -> withdraw -> summary in /docs
-    [ ] add account summary test
+    [ ] create quote response schema
+    [ ] create /market/quote/{symbol} endpoint
+    [ ] normalize symbol to uppercase
+    [ ] return a temporary hardcoded quote for one symbol
+    [ ] return 404 for unsupported symbols
+    [ ] manually test quote endpoint in /docs
+    [ ] add quote success test
+    [ ] add unsupported symbol test
+    [ ] decide which real market data API to use later
 
 complete
+    [x] create account summary response schema
+    [x] create /account/summary endpoint
+    [x] require auth token for account summary
+    [x] return current cash balance
+    [x] return total deposits amount
+    [x] return total withdrawals amount
+    [x] return transaction count
+    [x] manually test login -> deposit -> withdraw -> summary in /docs
+    [x] add account summary test
     [x] create withdraw request/response schemas
     [x] create /account/withdraw endpoint
     [x] require auth token for withdraw
@@ -76,4 +85,6 @@ deferred
     [x] extract reusable current user dependency
     [ ] move table creation out of main import
     [ ] add github actions for tests
-    [ ] start market quote endpoint
+    [ ] integrate real market quote API
+    [ ] add redis quote caching
+    [ ] start buy order endpoint

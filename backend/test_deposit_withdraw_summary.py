@@ -16,7 +16,7 @@ sys.path.insert(0, os.path.dirname(__file__))
 original_create_all = MetaData.create_all
 MetaData.create_all = lambda self, bind=None, tables=None, checkfirst=True: None
 try:
-    from main import deposit, register, withdraw
+    from main import account_summary, deposit, register, withdraw
 finally:
     MetaData.create_all = original_create_all
 
@@ -32,7 +32,7 @@ engine = create_engine(
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
-class DepositAndWithdrawTests(unittest.TestCase):
+class DepositWithdrawSummaryTests(unittest.TestCase):
     def setUp(self):
         Base.metadata.drop_all(bind=engine)
         Base.metadata.create_all(bind=engine)
@@ -100,6 +100,21 @@ class DepositAndWithdrawTests(unittest.TestCase):
     def test_withdraw_rejects_negative_amount(self):
         with self.assertRaises(ValidationError):
             WithdrawPayload(amount=Decimal("-1.00"))
+
+    def test_summary_after_deposit_and_withdraw(self):
+        user = register(
+            RegisterPayload(email="user@example.com", password="testtest"),
+            self.db,
+        )
+
+        deposit(DepositPayload(amount=Decimal("100.00")), user, self.db)
+        withdraw(WithdrawPayload(amount=Decimal("25.00")), user, self.db)
+        response = account_summary(user, self.db)
+
+        self.assertEqual(response["cash_balance"], Decimal("75.00"))
+        self.assertEqual(response["total_deposits"], Decimal("100.00"))
+        self.assertEqual(response["total_withdrawals"], Decimal("25.00"))
+        self.assertEqual(response["transaction_count"], 2)
 
 
 if __name__ == "__main__":

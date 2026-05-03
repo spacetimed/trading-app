@@ -36,3 +36,9 @@ class WithdrawPayload(BaseModel):
 
 class WithdrawResponse(BaseModel):
     cash_balance: Decimal
+
+class AccountSummaryResponse(BaseModel):
+    cash_balance: Decimal
+    total_deposits: Decimal
+    total_withdrawals: Decimal
+    transaction_count: int

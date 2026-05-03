@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta, timezone
+from decimal import Decimal
 import hashlib
 
 import jwt
@@ -10,6 +11,7 @@ from sqlalchemy.orm import Session
 from db import engine, get_db
 from models import Base, Transaction, User
 from schemas import (
+    AccountSummaryResponse,
     DepositPayload,
     DepositResponse,
     LoginPayload,
@@ -172,3 +174,29 @@ def withdraw(
     db.refresh(current_user)
 
     return {"cash_balance": current_user.cash_balance}
+
+
+@app.get("/account/summary", response_model=AccountSummaryResponse)
+def account_summary(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    transactions = db.query(Transaction).filter(
+        Transaction.user_id == current_user.id
+    ).all()
+
+    total_deposits = sum(
+        (txn.amount for txn in transactions if txn.type == "deposit"),
+        Decimal("0.00")
+    )
+    total_withdrawals = sum(
+        (txn.amount for txn in transactions if txn.type == "withdraw"),
+        Decimal("0.00")
+    )
+
+    return {
+        "cash_balance": current_user.cash_balance,
+        "total_deposits": total_deposits,
+        "total_withdrawals": total_withdrawals,
+        "transaction_count": len(transactions),
+    }
