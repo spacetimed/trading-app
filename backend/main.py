@@ -18,24 +18,32 @@ from schemas import (
     RegisterPayload,
     RegisterResponse,
     TokenResponse,
+    QuoteResponse,
     WithdrawPayload,
     WithdrawResponse,
 )
 
 
+# setup
 app = FastAPI()
-
 Base.metadata.create_all(bind=engine)
+security = HTTPBearer()
 
 
-def hash_password(password: str) -> str:
-    """return a hashed sha256-representation of the plaintext password"""
-    return hashlib.sha256(password.encode('utf-8')).hexdigest()
-
-
+# constants
 SECRET_KEY = "dev-key-i-will-change-this-later-lol"
 ALGORITHM = "HS256"
 TOKEN_EXPIRE_MINS = 30
+
+FAKE_QUOTES = {
+    "AAPL": Decimal("175.00"),
+}
+
+
+# helpers
+def hash_password(password: str) -> str:
+    """return a hashed sha256-representation of the plaintext password"""
+    return hashlib.sha256(password.encode("utf-8")).hexdigest()
 
 
 def create_access_token(data: dict) -> str:
@@ -43,9 +51,6 @@ def create_access_token(data: dict) -> str:
     data = data.copy()
     data.update({"exp": expire_time})
     return jwt.encode(data, SECRET_KEY, algorithm=ALGORITHM)
-
-
-security = HTTPBearer()
 
 
 def get_current_user(
@@ -199,4 +204,17 @@ def account_summary(
         "total_deposits": total_deposits,
         "total_withdrawals": total_withdrawals,
         "transaction_count": len(transactions),
+    }
+
+
+@app.get("/market/quote/{symbol}", response_model=QuoteResponse)
+def get_quote(symbol: str):
+    symbol = symbol.upper()
+
+    if symbol not in FAKE_QUOTES:
+        raise HTTPException(status_code=404, detail="symbol not found")
+
+    return {
+        "symbol": symbol,
+        "price": FAKE_QUOTES[symbol],
     }

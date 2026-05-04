@@ -42,3 +42,7 @@ class AccountSummaryResponse(BaseModel):
     total_deposits: Decimal
     total_withdrawals: Decimal
     transaction_count: int
+
+class QuoteResponse(BaseModel):
+    symbol: str
+    price: Decimal
