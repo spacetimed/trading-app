@@ -1,16 +1,26 @@
-2026-05-03
+2026-05-04
 
 next
-    [ ] decide which real market data API to use later
-    [ ] add market data provider notes to README
-    [ ] create small quote provider helper function
-    [ ] make /market/quote call the helper
-    [ ] keep hardcoded quote as fallback for now
-    [ ] add one more supported fake symbol
-    [ ] update quote tests for multiple symbols
-    [ ] manually test quote endpoint again in /docs
+    [ ] create stooq symbol formatter helper
+    [ ] create stooq quote url helper
+    [ ] fetch stooq csv with urllib
+    [ ] parse stooq csv response with csv module
+    [ ] read close price from stooq row
+    [ ] return stooq quote when fetch succeeds
+    [ ] fall back to fake quote when stooq fetch fails
+    [ ] return 404 when stooq and fallback both fail
+    [ ] add unit test for stooq csv parsing
+    [ ] manually test /market/quote/aapl in /docs
 
 complete
+    [x] decide which real market data API to use later (decided: stooq)
+    [x] add market data provider notes to README
+    [x] create small quote provider helper function
+    [x] make /market/quote call the helper
+    [x] keep hardcoded quote as fallback for now
+    [x] add one more supported fake symbol
+    [x] update quote tests for multiple symbols
+    [x] manually test quote endpoint again in /docs
     [x] create quote response schema
     [x] create /market/quote/{symbol} endpoint
     [x] normalize symbol to uppercase
@@ -92,6 +102,5 @@ deferred
     [x] extract reusable current user dependency
     [ ] move table creation out of main import
     [ ] add github actions for tests
-    [ ] integrate real market quote API
     [ ] add redis quote caching
     [ ] start buy order endpoint

@@ -18,11 +18,17 @@ finally:
 
 
 class QuoteTests(unittest.TestCase):
-    def test_quote_returns_hardcoded_symbol(self):
-        response = get_quote("aapl")
+    def test_quote_returns_supported_symbols(self):
+        cases = [
+            ("aapl", "AAPL", Decimal("175.00")),
+            ("msft", "MSFT", Decimal("425.00")),
+        ]
 
-        self.assertEqual(response["symbol"], "AAPL")
-        self.assertEqual(response["price"], Decimal("175.00"))
+        for input_symbol, expected_symbol, expected_price in cases:
+            response = get_quote(input_symbol)
+
+            self.assertEqual(response["symbol"], expected_symbol)
+            self.assertEqual(response["price"], expected_price)
 
     def test_quote_rejects_unsupported_symbol(self):
         with self.assertRaises(HTTPException) as context:

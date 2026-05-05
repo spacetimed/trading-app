@@ -23,6 +23,10 @@ Users should be able to:
 - Auth: JWT-based authentication
 - Deployment: Docker, AWS
 
+## Market Data
+
+For the MVP, quote data will use Stooq as the first real provider because it is free and does not require an API key. Stooq returns CSV data, and US symbols use a provider-specific suffix like `AAPL.US`.
+
 ## Frontend
 
 Planned screens and flows:

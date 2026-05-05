@@ -37,6 +37,7 @@ TOKEN_EXPIRE_MINS = 30
 
 FAKE_QUOTES = {
     "AAPL": Decimal("175.00"),
+    "MSFT": Decimal("425.00"),
 }
 
 
@@ -80,6 +81,11 @@ def get_current_user(
     return user
 
 
+def get_quote_price(symbol: str) -> Decimal | None:
+    return FAKE_QUOTES.get(symbol)
+
+
+# endpoints
 @app.get("/health")
 def health():
     return {"status": "ok"}
@@ -210,11 +216,12 @@ def account_summary(
 @app.get("/market/quote/{symbol}", response_model=QuoteResponse)
 def get_quote(symbol: str):
     symbol = symbol.upper()
+    price = get_quote_price(symbol)
 
-    if symbol not in FAKE_QUOTES:
+    if price is None:
         raise HTTPException(status_code=404, detail="symbol not found")
 
     return {
         "symbol": symbol,
-        "price": FAKE_QUOTES[symbol],
+        "price": price,
     }
