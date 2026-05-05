@@ -85,6 +85,14 @@ def get_current_user(
 
 
 def get_quote_price(symbol: str) -> Decimal | None:
+    try:
+        stooq_price = get_stooq_quote_price(symbol)
+    except Exception:
+        stooq_price = None
+
+    if stooq_price is not None:
+        return stooq_price
+
     return FAKE_QUOTES.get(symbol)
 
 

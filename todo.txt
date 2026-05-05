@@ -1,18 +1,33 @@
-2026-05-04
+2026-05-05
 
 next
+    [ ] decide basic buy order request/response shape
+    [ ] create buy order schemas
+    [ ] draft buy endpoint logic in plain english
+    [ ] create /orders/buy endpoint
+    [ ] require auth token for buy order
+    [ ] get current quote price inside buy endpoint
+    [ ] calculate order cost as quantity * price
+    [ ] reject buy when cash balance is too low
+    [ ] subtract order cost from cash balance
+    [ ] create trade row for buy
+    [ ] create or update position row
+    [ ] manually test deposit -> buy in /docs
+    [ ] add buy succeeds with enough cash test
+    [ ] add buy fails without enough cash test
+
+complete
+    [x] manually test /market/quote/aapl in /docs
+    [x] manually test unsupported quote symbol in /docs
     [x] create stooq symbol formatter helper
     [x] create stooq quote url helper
     [x] fetch stooq csv with urllib
     [x] parse stooq csv response with csv module
     [x] read close price from stooq row
-    [ ] return stooq quote when fetch succeeds
-    [ ] fall back to fake quote when stooq fetch fails
-    [ ] return 404 when stooq and fallback both fail
+    [x] return stooq quote when fetch succeeds
+    [x] fall back to fake quote when stooq fetch fails
+    [x] return 404 when stooq and fallback both fail
     [x] add unit test for stooq csv parsing
-    [ ] manually test /market/quote/aapl in /docs
-
-complete
     [x] decide which real market data API to use later (decided: stooq)
     [x] add market data provider notes to README
     [x] create small quote provider helper function
@@ -103,4 +118,4 @@ deferred
     [ ] move table creation out of main import
     [ ] add github actions for tests
     [ ] add redis quote caching
-    [ ] start buy order endpoint
+    [ ] start sell order endpoint
