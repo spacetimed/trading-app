@@ -1,8 +1,14 @@
-from datetime import datetime
+from datetime import datetime, timezone
+
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Numeric
 from sqlalchemy.orm import declarative_base
 
 Base = declarative_base()
+
+
+def utc_now():
+    return datetime.now(timezone.utc)
+
 
 class User(Base):
     __tablename__ = "users"
@@ -10,7 +16,7 @@ class User(Base):
     id = Column(Integer, primary_key=True, index=True)
     email = Column(String, unique=True, nullable=False, index=True)
     password = Column(String, nullable=False)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=utc_now)
     cash_balance = Column(Numeric(12, 2), nullable=False, default=0)
 
 
@@ -21,7 +27,7 @@ class Transaction(Base):
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     type = Column(String, nullable=False)  # deposit / withdraw
     amount = Column(Numeric(12, 2), nullable=False)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=utc_now)
 
 
 class Trade(Base):
@@ -33,7 +39,7 @@ class Trade(Base):
     side = Column(String, nullable=False)  # buy / sell
     quantity = Column(Integer, nullable=False)
     price = Column(Numeric(12, 2), nullable=False)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=utc_now)
 
 
 class Position(Base):

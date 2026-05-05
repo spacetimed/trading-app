@@ -1,15 +1,15 @@
 2026-05-04
 
 next
-    [ ] create stooq symbol formatter helper
-    [ ] create stooq quote url helper
-    [ ] fetch stooq csv with urllib
-    [ ] parse stooq csv response with csv module
-    [ ] read close price from stooq row
+    [x] create stooq symbol formatter helper
+    [x] create stooq quote url helper
+    [x] fetch stooq csv with urllib
+    [x] parse stooq csv response with csv module
+    [x] read close price from stooq row
     [ ] return stooq quote when fetch succeeds
     [ ] fall back to fake quote when stooq fetch fails
     [ ] return 404 when stooq and fallback both fail
-    [ ] add unit test for stooq csv parsing
+    [x] add unit test for stooq csv parsing
     [ ] manually test /market/quote/aapl in /docs
 
 complete

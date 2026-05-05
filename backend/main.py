@@ -1,6 +1,9 @@
+import csv
 from datetime import datetime, timedelta, timezone
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 import hashlib
+from io import StringIO
+from urllib.request import urlopen
 
 import jwt
 from fastapi import Depends, FastAPI, HTTPException
@@ -83,6 +86,44 @@ def get_current_user(
 
 def get_quote_price(symbol: str) -> Decimal | None:
     return FAKE_QUOTES.get(symbol)
+
+
+def format_stooq_symbol(symbol: str) -> str:
+    """e.g. f('AAPL') -> 'aapl.us'"""
+    return f"{symbol.strip().lower()}.us"
+
+
+def build_stooq_quote_url(symbol: str) -> str:
+    stooq_symbol = format_stooq_symbol(symbol)
+    return f"https://stooq.com/q/l/?s={stooq_symbol}&f=sd2t2ohlcv&h&e=csv"
+
+
+def fetch_stooq_csv(symbol: str) -> str:
+    url = build_stooq_quote_url(symbol)
+    with urlopen(url, timeout=5) as response:
+        return response.read().decode("utf-8")
+
+
+def parse_stooq_csv(csv_text: str) -> Decimal | None:
+    """turn the CSV response into a dictionary and select and return the close price"""
+    reader = csv.DictReader(StringIO(csv_text))
+    row = next(reader, None)
+    if not row:
+        return None
+
+    close = row.get("Close", "").strip()
+    if not close or close == "N/D":
+        return None
+
+    try:
+        return Decimal(close)
+    except InvalidOperation:
+        return None
+
+
+def get_stooq_quote_price(symbol: str) -> Decimal | None:
+    csv_text = fetch_stooq_csv(symbol)
+    return parse_stooq_csv(csv_text)
 
 
 # endpoints
