@@ -1,22 +1,33 @@
-2026-05-05
+2026-05-07
 
 next
-    [ ] decide basic buy order request/response shape
-    [ ] create buy order schemas
-    [ ] draft buy endpoint logic in plain english
-    [ ] create /orders/buy endpoint
-    [ ] require auth token for buy order
-    [ ] get current quote price inside buy endpoint
-    [ ] calculate order cost as quantity * price
-    [ ] reject buy when cash balance is too low
-    [ ] subtract order cost from cash balance
-    [ ] create trade row for buy
-    [ ] create or update position row
     [ ] manually test deposit -> buy in /docs
-    [ ] add buy succeeds with enough cash test
-    [ ] add buy fails without enough cash test
+    [ ] create position response schema
+    [ ] create /portfolio endpoint
+    [ ] require auth token for portfolio
+    [ ] return current user's positions
+    [ ] manually test portfolio after buy in /docs
+    [ ] add portfolio returns positions test
+    [ ] create trade response schema
+    [ ] create /trades endpoint
+    [ ] require auth token for trades
+    [ ] return current user's trade history
+    [ ] add trades endpoint test
 
 complete
+    [x] decide basic buy order request/response shape
+    [x] create buy order schemas
+    [x] draft buy endpoint logic in plain english
+    [x] create /orders/buy endpoint
+    [x] require auth token for buy order
+    [x] get current quote price inside buy endpoint
+    [x] calculate order cost as quantity * price
+    [x] reject buy when cash balance is too low
+    [x] subtract order cost from cash balance
+    [x] create trade row for buy
+    [x] create or update position row
+    [x] add buy succeeds with enough cash test
+    [x] add buy fails without enough cash test
     [x] manually test /market/quote/aapl in /docs
     [x] manually test unsupported quote symbol in /docs
     [x] create stooq symbol formatter helper

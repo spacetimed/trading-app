@@ -12,9 +12,18 @@ from jwt import InvalidTokenError
 from sqlalchemy.orm import Session
 
 from db import engine, get_db
-from models import Base, Transaction, User
+from models import (
+    Base,
+    Position,
+    Transaction,
+    Trade,
+    User,
+)
+
 from schemas import (
     AccountSummaryResponse,
+    BuyOrderPayload,
+    BuyOrderResponse,
     DepositPayload,
     DepositResponse,
     LoginPayload,
@@ -273,4 +282,69 @@ def get_quote(symbol: str):
     return {
         "symbol": symbol,
         "price": price,
+    }
+
+
+@app.post("/orders/buy", response_model=BuyOrderResponse)
+def buy_order(
+    payload: BuyOrderPayload,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    # sanitize
+    symbol = payload.symbol.upper()
+
+    # get current price
+    price = get_quote_price(symbol)
+    if price is None:
+        raise HTTPException(status_code=404, detail="symbol not found")
+
+    # check cash
+    total_cost = price * payload.quantity
+    if total_cost > current_user.cash_balance:
+        raise HTTPException(status_code=400, detail="insufficient cash")
+
+    # update cash/records => create/update position
+    current_user.cash_balance -= total_cost
+    trade = Trade(
+        user_id=current_user.id,
+        symbol=symbol,
+        side="buy",
+        quantity=payload.quantity,
+        price=price,
+    )
+    db.add(trade)
+
+    position = db.query(Position).filter(
+        Position.user_id == current_user.id,
+        Position.symbol == symbol,
+    ).first()
+
+    if not position:
+        position = Position(
+            user_id=current_user.id,
+            symbol=symbol,
+            quantity=payload.quantity,
+            avg_cost=price,
+        )
+        db.add(position)
+    else:
+        old_quantity = position.quantity
+        new_quantity = old_quantity + payload.quantity
+
+        position.avg_cost = (
+            (old_quantity * position.avg_cost) + (payload.quantity * price)
+        ) / new_quantity
+        position.quantity = new_quantity
+
+    db.commit()
+    db.refresh(current_user)
+
+    # return result
+    return {
+        "symbol": symbol,
+        "quantity": payload.quantity,
+        "price": price,
+        "total_cost": total_cost,
+        "cash_balance": current_user.cash_balance,
     }

@@ -46,3 +46,14 @@ class AccountSummaryResponse(BaseModel):
 class QuoteResponse(BaseModel):
     symbol: str
     price: Decimal
+
+class BuyOrderPayload(BaseModel):
+    symbol: str
+    quantity: int = Field(gt=0)
+
+class BuyOrderResponse(BaseModel):
+    symbol: str
+    quantity: int
+    price: Decimal
+    total_cost: Decimal
+    cash_balance: Decimal
