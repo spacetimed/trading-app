@@ -27,9 +27,11 @@ from schemas import (
     DepositPayload,
     DepositResponse,
     LoginPayload,
+    PositionResponse,
     RegisterPayload,
     RegisterResponse,
     TokenResponse,
+    TradeResponse,
     QuoteResponse,
     WithdrawPayload,
     WithdrawResponse,
@@ -348,3 +350,23 @@ def buy_order(
         "total_cost": total_cost,
         "cash_balance": current_user.cash_balance,
     }
+
+
+@app.get("/portfolio", response_model=list[PositionResponse])
+def portfolio(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    return db.query(Position).filter(
+        Position.user_id == current_user.id
+    ).all()
+
+
+@app.get("/trades", response_model=list[TradeResponse])
+def trades(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    return db.query(Trade).filter(
+        Trade.user_id == current_user.id
+    ).order_by(Trade.created_at.asc()).all()

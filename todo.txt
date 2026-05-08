@@ -1,20 +1,34 @@
 2026-05-07
 
 next
-    [ ] manually test deposit -> buy in /docs
-    [ ] create position response schema
-    [ ] create /portfolio endpoint
-    [ ] require auth token for portfolio
-    [ ] return current user's positions
-    [ ] manually test portfolio after buy in /docs
-    [ ] add portfolio returns positions test
-    [ ] create trade response schema
-    [ ] create /trades endpoint
-    [ ] require auth token for trades
-    [ ] return current user's trade history
-    [ ] add trades endpoint test
+    [ ] decide basic sell order request/response shape
+    [ ] create sell order schemas
+    [ ] draft sell endpoint logic in plain english
+    [ ] create /orders/sell endpoint
+    [ ] require auth token for sell order
+    [ ] get current quote price inside sell endpoint
+    [ ] reject sell when position does not exist
+    [ ] reject sell when quantity is greater than shares owned
+    [ ] add sale proceeds to cash balance
+    [ ] create trade row for sell
+    [ ] decrease or delete position after sell
+    [ ] manually test buy -> sell -> portfolio in /docs
+    [ ] add sell succeeds with enough shares test
+    [ ] add sell fails without enough shares test
 
 complete
+    [x] manually test deposit -> buy in /docs
+    [x] create position response schema
+    [x] create /portfolio endpoint
+    [x] require auth token for portfolio
+    [x] return current user's positions
+    [x] manually test portfolio after buy in /docs
+    [x] add portfolio returns positions test
+    [x] create trade response schema
+    [x] create /trades endpoint
+    [x] require auth token for trades
+    [x] return current user's trade history
+    [x] add trades endpoint test
     [x] decide basic buy order request/response shape
     [x] create buy order schemas
     [x] draft buy endpoint logic in plain english
@@ -129,4 +143,4 @@ deferred
     [ ] move table creation out of main import
     [ ] add github actions for tests
     [ ] add redis quote caching
-    [ ] start sell order endpoint
+    [ ] add realized pnl tracking

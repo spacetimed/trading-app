@@ -57,3 +57,19 @@ class BuyOrderResponse(BaseModel):
     price: Decimal
     total_cost: Decimal
     cash_balance: Decimal
+
+class PositionResponse(BaseModel):
+    symbol: str
+    quantity: int
+    avg_cost: Decimal
+
+    model_config = ConfigDict(from_attributes=True) # fit Position objects dynamically
+
+class TradeResponse(BaseModel):
+    symbol: str
+    side: str
+    quantity: int
+    price: Decimal
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)

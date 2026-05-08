@@ -4,4 +4,5 @@ venv/bin/python -m unittest -v \
   ./test_deposit_withdraw_summary.py \
   ./test_quote.py \
   ./test_market_data.py \
-  ./test_buy_order.py
+  ./test_buy_order.py \
+  ./test_portfolio_and_trades.py
