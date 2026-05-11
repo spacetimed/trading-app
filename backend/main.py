@@ -33,6 +33,8 @@ from schemas import (
     TokenResponse,
     TradeResponse,
     QuoteResponse,
+    SellOrderPayload,
+    SellOrderResponse,
     WithdrawPayload,
     WithdrawResponse,
 )
@@ -370,3 +372,59 @@ def trades(
     return db.query(Trade).filter(
         Trade.user_id == current_user.id
     ).order_by(Trade.created_at.asc()).all()
+
+
+@app.post("/orders/sell", response_model=SellOrderResponse)
+def sell_order(
+    payload: SellOrderPayload,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    symbol = payload.symbol.upper()
+
+    price = get_quote_price(symbol)
+    if price is None:
+        raise HTTPException(status_code=404, detail="symbol not found")
+
+    # find position
+    position = db.query(Position).filter(
+        Position.user_id == current_user.id,
+        Position.symbol == symbol,
+    ).first()
+
+    if not position:
+        raise HTTPException(status_code=400, detail="no shares held")
+
+    if payload.quantity > position.quantity:
+        raise HTTPException(status_code=400, detail="not enough shares")
+
+    # update cash/trade
+    total_proceeds = price * payload.quantity
+    current_user.cash_balance += total_proceeds
+
+    trade = Trade(
+        user_id=current_user.id,
+        symbol=symbol,
+        side="sell",
+        quantity=payload.quantity,
+        price=price,
+    )
+    db.add(trade)
+
+    # update|delete position
+    position.quantity -= payload.quantity
+    if position.quantity == 0:
+        db.delete(position)
+
+    db.commit()
+    db.refresh(current_user)
+
+    # return SellOrderResponse
+    return {
+        "symbol": symbol,
+        "quantity": payload.quantity,
+        "price": price,
+        "total_proceeds": total_proceeds,
+        "cash_balance": current_user.cash_balance,
+    }
+

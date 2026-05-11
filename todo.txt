@@ -1,22 +1,29 @@
-2026-05-07
+2026-05-10
 
 next
-    [ ] decide basic sell order request/response shape
-    [ ] create sell order schemas
-    [ ] draft sell endpoint logic in plain english
-    [ ] create /orders/sell endpoint
-    [ ] require auth token for sell order
-    [ ] get current quote price inside sell endpoint
-    [ ] reject sell when position does not exist
-    [ ] reject sell when quantity is greater than shares owned
-    [ ] add sale proceeds to cash balance
-    [ ] create trade row for sell
-    [ ] decrease or delete position after sell
     [ ] manually test buy -> sell -> portfolio in /docs
-    [ ] add sell succeeds with enough shares test
-    [ ] add sell fails without enough shares test
+    [ ] manually test selling too many shares in /docs
+    [ ] decide what portfolio should show besides symbol/quantity/avg cost
+    [ ] add current price to portfolio response
+    [ ] add market value to portfolio response
+    [ ] add simple unrealized gain/loss field
+    [ ] add one portfolio value test
 
 complete
+    [x] small refactor: move tests to their own directory
+    [x] decide basic sell order request/response shape
+    [x] create sell order schemas
+    [x] draft sell endpoint logic in plain english
+    [x] create /orders/sell endpoint
+    [x] require auth token for sell order
+    [x] get current quote price inside sell endpoint
+    [x] reject sell when position does not exist
+    [x] reject sell when quantity is greater than shares owned
+    [x] add sale proceeds to cash balance
+    [x] create trade row for sell
+    [x] decrease or delete position after sell
+    [x] add sell succeeds with enough shares test
+    [x] add sell fails without enough shares test
     [x] manually test deposit -> buy in /docs
     [x] create position response schema
     [x] create /portfolio endpoint

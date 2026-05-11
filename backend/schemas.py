@@ -73,3 +73,14 @@ class TradeResponse(BaseModel):
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+class SellOrderPayload(BaseModel):
+    symbol: str
+    quantity: int = Field(gt=0)
+
+class SellOrderResponse(BaseModel):
+    symbol: str
+    quantity: int
+    price: Decimal
+    total_proceeds: Decimal
+    cash_balance: Decimal
