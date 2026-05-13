@@ -1,8 +1,6 @@
-2026-05-12
+2026-05-13
 
 next
-    [ ] decide frontend stack and folder structure
-    [ ] create minimal frontend app
     [ ] add login/register screen
     [ ] store auth token after login
     [ ] create dashboard page shell
@@ -11,6 +9,8 @@ next
     [ ] add simple quote lookup form
 
 complete
+    [x] decide frontend stack and folder structure
+    [x] create minimal frontend app
     [x] manually test buy -> sell -> portfolio in /docs
     [x] manually test selling too many shares in /docs
     [x] decide what portfolio should show besides symbol/quantity/avg cost
