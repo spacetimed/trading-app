@@ -1,14 +1,14 @@
 2026-05-13
 
 next
-    [ ] add login/register screen
-    [ ] store auth token after login
     [ ] create dashboard page shell
     [ ] fetch and display account summary
     [ ] fetch and display enriched portfolio
     [ ] add simple quote lookup form
 
 complete
+    [x] add login/register screen
+    [x] store auth token after login
     [x] decide frontend stack and folder structure
     [x] create minimal frontend app
     [x] manually test buy -> sell -> portfolio in /docs
