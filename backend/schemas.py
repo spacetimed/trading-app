@@ -62,6 +62,11 @@ class PositionResponse(BaseModel):
     symbol: str
     quantity: int
     avg_cost: Decimal
+    current_price: Decimal
+    cost_basis: Decimal
+    market_value: Decimal
+    unrealized_gain_loss: Decimal
+    unrealized_gain_loss_percent: Decimal
 
     model_config = ConfigDict(from_attributes=True) # fit Position objects dynamically
 

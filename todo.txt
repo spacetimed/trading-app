@@ -1,15 +1,25 @@
-2026-05-10
+2026-05-12
 
 next
-    [ ] manually test buy -> sell -> portfolio in /docs
-    [ ] manually test selling too many shares in /docs
-    [ ] decide what portfolio should show besides symbol/quantity/avg cost
-    [ ] add current price to portfolio response
-    [ ] add market value to portfolio response
-    [ ] add simple unrealized gain/loss field
-    [ ] add one portfolio value test
+    [ ] decide frontend stack and folder structure
+    [ ] create minimal frontend app
+    [ ] add login/register screen
+    [ ] store auth token after login
+    [ ] create dashboard page shell
+    [ ] fetch and display account summary
+    [ ] fetch and display enriched portfolio
+    [ ] add simple quote lookup form
 
 complete
+    [x] manually test buy -> sell -> portfolio in /docs
+    [x] manually test selling too many shares in /docs
+    [x] decide what portfolio should show besides symbol/quantity/avg cost
+    [x] add current price to portfolio response
+    [x] add cost basis to portfolio response
+    [x] add market value to portfolio response
+    [x] add simple unrealized gain/loss field
+    [x] add unrealized gain/loss percent field
+    [x] add one portfolio value test
     [x] small refactor: move tests to their own directory
     [x] decide basic sell order request/response shape
     [x] create sell order schemas

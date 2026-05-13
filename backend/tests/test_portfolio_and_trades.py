@@ -50,12 +50,21 @@ class PortfolioAndTradesTests(unittest.TestCase):
         with patch("main.get_quote_price", return_value=Decimal("100.00")):
             buy_order(BuyOrderPayload(symbol="aapl", quantity=2), user, self.db)
 
-        positions = portfolio(user, self.db)
+        with patch("main.get_quote_price", return_value=Decimal("120.00")):
+            positions = portfolio(user, self.db)
 
         self.assertEqual(len(positions), 1)
-        self.assertEqual(positions[0].symbol, "AAPL")
-        self.assertEqual(positions[0].quantity, 2)
-        self.assertEqual(positions[0].avg_cost, Decimal("100.00"))
+        self.assertEqual(positions[0]["symbol"], "AAPL")
+        self.assertEqual(positions[0]["quantity"], 2)
+        self.assertEqual(positions[0]["avg_cost"], Decimal("100.00"))
+        self.assertEqual(positions[0]["current_price"], Decimal("120.00"))
+        self.assertEqual(positions[0]["cost_basis"], Decimal("200.00"))
+        self.assertEqual(positions[0]["market_value"], Decimal("240.00"))
+        self.assertEqual(positions[0]["unrealized_gain_loss"], Decimal("40.00"))
+        self.assertEqual(
+            positions[0]["unrealized_gain_loss_percent"],
+            Decimal("20.00"),
+        )
 
     def test_trades_returns_history_after_buy(self):
         user = register(

@@ -359,9 +359,44 @@ def portfolio(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    return db.query(Position).filter(
+    positions = db.query(Position).filter(
         Position.user_id == current_user.id
     ).all()
+
+    portfolio_items = []
+
+    for position in positions:
+        current_price = get_quote_price(position.symbol)
+        if current_price is None:
+            current_price = position.avg_cost
+
+        cost_basis = position.quantity * position.avg_cost
+        market_value = position.quantity * current_price
+        unrealized_gain_loss = market_value - cost_basis
+
+        if cost_basis == 0:
+            unrealized_gain_loss_percent = Decimal("0")
+        else:
+            unrealized_gain_loss_percent = (
+                unrealized_gain_loss / cost_basis
+            ) * Decimal("100")
+
+        unrealized_gain_loss_percent = unrealized_gain_loss_percent.quantize(
+            Decimal("0.01")
+        )
+
+        portfolio_items.append({
+            "symbol": position.symbol,
+            "quantity": position.quantity,
+            "avg_cost": position.avg_cost,
+            "current_price": current_price,
+            "cost_basis": cost_basis,
+            "market_value": market_value,
+            "unrealized_gain_loss": unrealized_gain_loss,
+            "unrealized_gain_loss_percent": unrealized_gain_loss_percent,
+        })
+
+    return portfolio_items
 
 
 @app.get("/trades", response_model=list[TradeResponse])
@@ -427,4 +462,3 @@ def sell_order(
         "total_proceeds": total_proceeds,
         "cash_balance": current_user.cash_balance,
     }
-
