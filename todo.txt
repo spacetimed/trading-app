@@ -1,12 +1,25 @@
-2026-05-13
+2026-05-14
 
 next
-    [ ] create dashboard page shell
-    [ ] fetch and display account summary
-    [ ] fetch and display enriched portfolio
-    [ ] add simple quote lookup form
+    [ ] add deposit form to dashboard
+    [ ] add withdraw form to dashboard
+    [ ] fetch and display trade history
+    [ ] refresh account summary and portfolio after deposit/withdraw
+    [ ] show simple success/error messages for account actions
 
 complete
+    [x] install mui for frontend components
+    [x] replace custom auth css with mui theme styling
+    [x] add dark dashboard layout
+    [x] wire frontend quote lookup to backend
+    [x] wire frontend buy/sell forms to backend
+    [x] tighten dashboard spacing and typography
+    [x] add buy order form to dashboard
+    [x] add sell order form to dashboard
+    [x] create dashboard page shell
+    [x] fetch and display account summary
+    [x] fetch and display enriched portfolio
+    [x] add simple quote lookup form
     [x] add login/register screen
     [x] store auth token after login
     [x] decide frontend stack and folder structure

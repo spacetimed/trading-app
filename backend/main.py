@@ -3,7 +3,8 @@ from datetime import datetime, timedelta, timezone
 from decimal import Decimal, InvalidOperation
 import hashlib
 from io import StringIO
-from urllib.request import urlopen
+import json
+from urllib.request import Request, urlopen
 
 import jwt
 from fastapi import Depends, FastAPI, HTTPException
@@ -107,6 +108,14 @@ def get_current_user(
 
 def get_quote_price(symbol: str) -> Decimal | None:
     try:
+        yahoo_price = get_yahoo_quote_price(symbol)
+    except Exception:
+        yahoo_price = None
+
+    if yahoo_price is not None:
+        return yahoo_price
+
+    try:
         stooq_price = get_stooq_quote_price(symbol)
     except Exception:
         stooq_price = None
@@ -115,6 +124,39 @@ def get_quote_price(symbol: str) -> Decimal | None:
         return stooq_price
 
     return FAKE_QUOTES.get(symbol)
+
+
+def build_yahoo_quote_url(symbol: str) -> str:
+    return f"https://query1.finance.yahoo.com/v8/finance/chart/{symbol}?range=1d&interval=1d"
+
+
+def fetch_yahoo_quote_json(symbol: str) -> dict:
+    request = Request(
+        build_yahoo_quote_url(symbol),
+        headers={"User-Agent": "Mozilla/5.0"},
+    )
+    with urlopen(request, timeout=5) as response:
+        return json.loads(response.read().decode("utf-8"))
+
+
+def parse_yahoo_quote(data: dict) -> Decimal | None:
+    result = data.get("chart", {}).get("result") or []
+    if not result:
+        return None
+
+    price = result[0].get("meta", {}).get("regularMarketPrice")
+    if price is None:
+        return None
+
+    try:
+        return Decimal(str(price))
+    except InvalidOperation:
+        return None
+
+
+def get_yahoo_quote_price(symbol: str) -> Decimal | None:
+    data = fetch_yahoo_quote_json(symbol)
+    return parse_yahoo_quote(data)
 
 
 def format_stooq_symbol(symbol: str) -> str:

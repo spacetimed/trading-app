@@ -1,14 +1,83 @@
-import { useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
+import {
+  Alert,
+  Box,
+  Button,
+  ButtonGroup,
+  Card,
+  CardContent,
+  Chip,
+  Container,
+  Stack,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  TextField,
+  Typography,
+} from '@mui/material'
 
-import { loginUser, registerUser } from './api'
+import {
+  buyOrder,
+  getAccountSummary,
+  getCurrentUser,
+  getPortfolio,
+  getQuote,
+  loginUser,
+  registerUser,
+  sellOrder,
+} from './api'
 
 function App() {
+  const [token, setToken] = useState(() => localStorage.getItem('token') ?? '')
   const [mode, setMode] = useState('login')
   const [email, setEmail] = useState('user@example.com')
   const [password, setPassword] = useState('testtest')
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [summary, setSummary] = useState(null)
+  const [portfolio, setPortfolio] = useState([])
+  const [user, setUser] = useState(null)
+  const [dashboardError, setDashboardError] = useState('')
+  const [isDashboardLoading, setIsDashboardLoading] = useState(false)
+  const [quoteSymbol, setQuoteSymbol] = useState('AAPL')
+  const [quote, setQuote] = useState(null)
+  const [quoteError, setQuoteError] = useState('')
+  const [orderSide, setOrderSide] = useState('buy')
+  const [orderSymbol, setOrderSymbol] = useState('AAPL')
+  const [orderQuantity, setOrderQuantity] = useState(1)
+  const [orderMessage, setOrderMessage] = useState('')
+  const [orderError, setOrderError] = useState('')
+  const [isOrderSubmitting, setIsOrderSubmitting] = useState(false)
+
+  const loadDashboard = useCallback(async () => {
+    setDashboardError('')
+    setIsDashboardLoading(true)
+
+    try {
+      const [summaryData, portfolioData, userData] = await Promise.all([
+        getAccountSummary(token),
+        getPortfolio(token),
+        getCurrentUser(token),
+      ])
+      setSummary(summaryData)
+      setPortfolio(portfolioData)
+      setUser(userData)
+    } catch (err) {
+      setDashboardError(err.message)
+    } finally {
+      setIsDashboardLoading(false)
+    }
+  }, [token])
+
+  useEffect(() => {
+    if (token) {
+      queueMicrotask(loadDashboard)
+    }
+  }, [token, loadDashboard])
 
   async function handleSubmit(event) {
     event.preventDefault()
@@ -20,7 +89,8 @@ function App() {
       if (mode === 'login') {
         const data = await loginUser({ email, password })
         localStorage.setItem('token', data.token)
-        setMessage('login successful. token stored.')
+        setMessage('login successful, redirecting...')
+        setTimeout(() => setToken(data.token), 450)
       } else {
         const data = await registerUser({ email, password })
         setMessage(`registered ${data.email}. you can log in now.`)
@@ -32,68 +102,543 @@ function App() {
     }
   }
 
+  async function handleQuoteSubmit(event) {
+    event.preventDefault()
+    setQuote(null)
+    setQuoteError('')
+
+    try {
+      const symbol = quoteSymbol.trim().toUpperCase()
+      const data = await getQuote(symbol)
+      setQuoteSymbol(symbol)
+      setQuote(data)
+    } catch (err) {
+      setQuoteError(err.message)
+    }
+  }
+
+  async function handleOrderSubmit(event) {
+    event.preventDefault()
+    setOrderMessage('')
+    setOrderError('')
+    setIsOrderSubmitting(true)
+
+    try {
+      const payload = {
+        symbol: orderSymbol.trim().toUpperCase(),
+        quantity: Math.max(1, Number(orderQuantity)),
+      }
+      const data = orderSide === 'buy'
+        ? await buyOrder(token, payload)
+        : await sellOrder(token, payload)
+
+      setOrderSymbol(payload.symbol)
+      setOrderMessage(
+        `${data.side ?? orderSide} ${data.quantity} ${data.symbol} @ ${formatMoney(data.price)}`,
+      )
+      await loadDashboard()
+    } catch (err) {
+      setOrderError(err.message)
+    } finally {
+      setIsOrderSubmitting(false)
+    }
+  }
+
+  function handleLogout() {
+    localStorage.removeItem('token')
+    setToken('')
+    setSummary(null)
+    setPortfolio([])
+    setUser(null)
+    setQuote(null)
+    setDashboardError('')
+  }
+
+  if (token) {
+    return (
+      <Box component="main" sx={{ minHeight: '100vh', py: 4 }}>
+        <Container maxWidth="lg">
+          <Stack spacing={3}>
+            <Box
+              sx={{
+                alignItems: 'start',
+                display: 'flex',
+                gap: 2,
+                justifyContent: 'space-between',
+                width: '100%',
+              }}
+            >
+              <Box>
+                <Eyebrow>paper trading</Eyebrow>
+                <Typography variant="h5">dashboard</Typography>
+              </Box>
+              <Box
+                sx={{
+                  alignItems: 'flex-end',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  lineHeight: 1.1,
+                  ml: 'auto',
+                  textAlign: 'right',
+                }}
+              >
+                <Typography color="text.secondary" component="div" variant="caption">
+                  hello, {formatUserName(user?.email)}
+                </Typography>
+                <Button
+                  color="inherit"
+                  onClick={handleLogout}
+                  sx={{
+                    display: 'block',
+                    lineHeight: 1.2,
+                    minWidth: 0,
+                    mt: 0.75,
+                    p: 0,
+                    textAlign: 'right',
+                  }}
+                  variant="text"
+                >
+                  logout
+                </Button>
+              </Box>
+            </Box>
+
+            <Box
+              sx={{
+                display: 'grid',
+                gap: 2,
+                gridTemplateColumns: { xs: '1fr', md: '1.35fr 0.85fr' },
+              }}
+            >
+              <Stack spacing={2}>
+                <Card>
+                  <CardContent>
+                    <PanelHeader
+                      title="account summary"
+                    />
+
+                    {dashboardError && (
+                      <Alert severity="error">{dashboardError}</Alert>
+                    )}
+                    {!summary && !dashboardError && (
+                      <Typography color="text.secondary" variant="body2">
+                        loading account data...
+                      </Typography>
+                    )}
+                    {summary && (
+                      <Box
+                        sx={{
+                          display: 'grid',
+                          gap: 1.5,
+                          gridTemplateColumns: {
+                            xs: '1fr 1fr',
+                            sm: 'repeat(4, 1fr)',
+                          },
+                        }}
+                      >
+                        <Stat
+                          label="cash"
+                          value={formatMoney(summary.cash_balance)}
+                        />
+                        <Stat
+                          label="deposits"
+                          value={formatMoney(summary.total_deposits)}
+                        />
+                        <Stat
+                          label="withdrawals"
+                          value={formatMoney(summary.total_withdrawals)}
+                        />
+                        <Stat label="transactions" value={summary.transaction_count} />
+                      </Box>
+                    )}
+                    {summary && (
+                      <Box sx={{ display: 'flex', mt: 1.25 }}>
+                        <Button
+                          disabled={isDashboardLoading}
+                          onClick={loadDashboard}
+                          size="small"
+                          sx={{ minWidth: 0, px: 0 }}
+                          variant="text"
+                        >
+                          refresh
+                        </Button>
+                      </Box>
+                    )}
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardContent sx={{ pb: 2.5 }}>
+                    <PanelHeader title="positions" />
+                    {portfolio.length === 0 ? (
+                      <Typography color="text.secondary" variant="body2">
+                        no open positions yet.
+                      </Typography>
+                    ) : (
+                      <TableContainer>
+                        <Table size="small">
+                          <TableHead>
+                            <TableRow>
+                              <TableCell>symbol</TableCell>
+                              <TableCell>qty</TableCell>
+                              <TableCell>avg</TableCell>
+                              <TableCell>price</TableCell>
+                              <TableCell>value</TableCell>
+                              <TableCell>p/l</TableCell>
+                            </TableRow>
+                          </TableHead>
+                          <TableBody>
+                            {portfolio.map((position) => (
+                              <TableRow key={position.symbol}>
+                                <TableCell>{position.symbol}</TableCell>
+                                <TableCell>{position.quantity}</TableCell>
+                                <TableCell>{formatMoney(position.avg_cost)}</TableCell>
+                                <TableCell>
+                                  {formatMoney(position.current_price)}
+                                </TableCell>
+                                <TableCell>
+                                  {formatMoney(position.market_value)}
+                                </TableCell>
+                                <TableCell>
+                                  <Chip
+                                    color={getPnLColor(
+                                      position.unrealized_gain_loss,
+                                    )}
+                                    label={`${formatMoney(position.unrealized_gain_loss)} · ${formatPercent(position.unrealized_gain_loss_percent)}`}
+                                    size="small"
+                                    variant="outlined"
+                                  />
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </TableContainer>
+                    )}
+                  </CardContent>
+                </Card>
+              </Stack>
+
+              <Card sx={{ alignSelf: 'start' }}>
+                <CardContent sx={{ p: 2.5 }}>
+                  <Stack spacing={3.25}>
+                    <Box>
+                      <PanelHeader title="quote lookup" />
+                      <Box
+                        component="form"
+                        onSubmit={handleQuoteSubmit}
+                        sx={{
+                          alignItems: 'center',
+                          display: 'grid',
+                          gap: 1.5,
+                          gridTemplateColumns: '1fr auto',
+                        }}
+                      >
+                        <TextField
+                          fullWidth
+                          label="symbol"
+                          onChange={(event) => setQuoteSymbol(event.target.value)}
+                          size="small"
+                          value={quoteSymbol}
+                        />
+                        <Button type="submit" variant="contained">
+                          quote
+                        </Button>
+                      </Box>
+
+                      {quote && (
+                        <Box
+                          sx={{
+                            alignItems: 'center',
+                            bgcolor: 'rgba(134, 239, 172, 0.07)',
+                            border: 1,
+                            borderColor: 'success.dark',
+                            borderRadius: 1,
+                            display: 'flex',
+                            gap: 1.5,
+                            justifyContent: 'flex-start',
+                            mt: 2,
+                            p: 2,
+                          }}
+                        >
+                          <Chip color="success" label={quote.symbol} size="small" />
+                          <Typography
+                            color="success.main"
+                            fontWeight={700}
+                            sx={{ ml: 0.5 }}
+                          >
+                            {formatMoney(quote.price)}
+                          </Typography>
+                        </Box>
+                      )}
+                      {quoteError && (
+                        <Alert severity="error" sx={{ mt: 2 }}>
+                          {quoteError}
+                        </Alert>
+                      )}
+                    </Box>
+
+                    <Box component="form" onSubmit={handleOrderSubmit}>
+                      <PanelHeader title="trade" />
+                      <Stack spacing={1.5}>
+                        <ButtonGroup fullWidth size="small" variant="outlined">
+                          <Button
+                            onClick={() => setOrderSide('buy')}
+                            type="button"
+                            variant={orderSide === 'buy' ? 'contained' : 'outlined'}
+                          >
+                            buy
+                          </Button>
+                          <Button
+                            onClick={() => setOrderSide('sell')}
+                            type="button"
+                            variant={orderSide === 'sell' ? 'contained' : 'outlined'}
+                          >
+                            sell
+                          </Button>
+                        </ButtonGroup>
+                        <Box
+                          sx={{
+                            alignItems: 'end',
+                            display: 'grid',
+                            gap: 1.5,
+                            gridTemplateColumns: { xs: '1fr', sm: '1fr auto' },
+                          }}
+                        >
+                          <TextField
+                            fullWidth
+                            label="symbol"
+                            onChange={(event) => setOrderSymbol(event.target.value)}
+                            size="small"
+                            value={orderSymbol}
+                          />
+                          <QuantityStepper
+                            onChange={setOrderQuantity}
+                            value={orderQuantity}
+                          />
+                        </Box>
+                        <Button
+                          disabled={isOrderSubmitting}
+                          sx={{
+                            bgcolor: '#141416',
+                            border: 1,
+                            borderColor: 'divider',
+                            color: 'text.primary',
+                            boxShadow: 'none',
+                            '&:hover': {
+                              bgcolor: '#1f1f23',
+                              boxShadow: 'none',
+                            },
+                          }}
+                          type="submit"
+                          variant="contained"
+                        >
+                          {isOrderSubmitting ? 'submitting...' : `${orderSide} shares`}
+                        </Button>
+                      </Stack>
+                      {orderMessage && (
+                        <Alert severity="success" sx={{ mt: 2 }}>
+                          {orderMessage}
+                        </Alert>
+                      )}
+                      {orderError && (
+                        <Alert severity="error" sx={{ mt: 2 }}>
+                          {orderError}
+                        </Alert>
+                      )}
+                    </Box>
+                  </Stack>
+                </CardContent>
+              </Card>
+            </Box>
+          </Stack>
+        </Container>
+      </Box>
+    )
+  }
+
   return (
-    <main className="auth-page">
-      <section className="auth-card" aria-labelledby="auth-title">
-        <div className="auth-header">
-          <p className="eyebrow">paper trading</p>
-          <h1 id="auth-title">{mode === 'login' ? 'log in' : 'register'}</h1>
-          <p className="subtitle">
-            connect to your local FastAPI backend.
-          </p>
-        </div>
+    <Box
+      component="main"
+      sx={{
+        display: 'grid',
+        minHeight: '100vh',
+        placeItems: 'center',
+        px: 2,
+      }}
+    >
+      <Card sx={{ maxWidth: 420, width: '100%' }}>
+        <CardContent sx={{ p: 3.5 }}>
+          <Stack spacing={2.25}>
+            <Box>
+              <Eyebrow>paper trading</Eyebrow>
+              <Typography variant="h5">
+                {mode === 'login' ? 'log in' : 'register'}
+              </Typography>
+              <Typography color="text.secondary" sx={{ mt: 1 }} variant="body2">
+                connect to your local FastAPI backend.
+              </Typography>
+            </Box>
 
-        <div className="mode-tabs" aria-label="auth mode">
-          <button
-            className={mode === 'login' ? 'tab active' : 'tab'}
-            type="button"
-            onClick={() => setMode('login')}
-          >
-            login
-          </button>
-          <button
-            className={mode === 'register' ? 'tab active' : 'tab'}
-            type="button"
-            onClick={() => setMode('register')}
-          >
-            register
-          </button>
-        </div>
+            <ButtonGroup fullWidth variant="outlined">
+              <Button
+                onClick={() => setMode('login')}
+                variant={mode === 'login' ? 'contained' : 'outlined'}
+              >
+                login
+              </Button>
+              <Button
+                onClick={() => setMode('register')}
+                variant={mode === 'register' ? 'contained' : 'outlined'}
+              >
+                register
+              </Button>
+            </ButtonGroup>
 
-        <form className="auth-form" onSubmit={handleSubmit}>
-          <label>
-            email
-            <input
-              autoComplete="email"
-              onChange={(event) => setEmail(event.target.value)}
-              placeholder="user@example.com"
-              type="email"
-              value={email}
-            />
-          </label>
+            <Stack component="form" onSubmit={handleSubmit} spacing={2}>
+              <TextField
+                autoComplete="email"
+                fullWidth
+                label="email"
+                onChange={(event) => setEmail(event.target.value)}
+                type="email"
+                value={email}
+              />
+              <TextField
+                autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
+                fullWidth
+                label="password"
+                onChange={(event) => setPassword(event.target.value)}
+                slotProps={{ htmlInput: { minLength: 8 } }}
+                type="password"
+                value={password}
+              />
+              <Button disabled={isSubmitting} type="submit" variant="contained">
+                {isSubmitting ? 'working...' : mode}
+              </Button>
+            </Stack>
 
-          <label>
-            password
-            <input
-              autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
-              minLength={8}
-              onChange={(event) => setPassword(event.target.value)}
-              placeholder="at least 8 characters"
-              type="password"
-              value={password}
-            />
-          </label>
-
-          <button className="submit-button" disabled={isSubmitting} type="submit">
-            {isSubmitting ? 'working...' : mode}
-          </button>
-        </form>
-
-        {message && <p className="status success">{message}</p>}
-        {error && <p className="status error">{error}</p>}
-      </section>
-    </main>
+            {message && <Alert severity="success">{message}</Alert>}
+            {error && <Alert severity="error">{error}</Alert>}
+          </Stack>
+        </CardContent>
+      </Card>
+    </Box>
   )
+}
+
+function Eyebrow({ children }) {
+  return (
+    <Typography
+      color="text.secondary"
+      fontWeight={700}
+      sx={{ letterSpacing: '0.08em', textTransform: 'uppercase' }}
+      variant="caption"
+    >
+      {children}
+    </Typography>
+  )
+}
+
+function PanelHeader({ title }) {
+  return (
+    <Typography
+      color="text.secondary"
+      component="div"
+      fontWeight={700}
+      sx={{ letterSpacing: '0.08em', mb: 1.5, textTransform: 'uppercase' }}
+      variant="caption"
+    >
+      {title}
+    </Typography>
+  )
+}
+
+function QuantityStepper({ onChange, value }) {
+  const quantity = Math.max(1, Number(value) || 1)
+
+  return (
+    <Stack spacing={0.5} sx={{ width: { xs: '100%', sm: 144 } }}>
+      <Typography color="text.secondary" variant="caption">
+        qty
+      </Typography>
+      <ButtonGroup fullWidth size="small" variant="outlined">
+        <Button onClick={() => onChange(Math.max(1, quantity - 1))} type="button">
+          -
+        </Button>
+        <Button
+          sx={{
+            '&.Mui-disabled': {
+              WebkitTextFillColor: '#e5e7eb',
+              borderColor: 'divider',
+              color: 'text.primary',
+              opacity: 1,
+            },
+          }}
+        >
+          {quantity}
+        </Button>
+        <Button onClick={() => onChange(quantity + 1)} type="button">
+          +
+        </Button>
+      </ButtonGroup>
+    </Stack>
+  )
+}
+
+function Stat({ label, value }) {
+  return (
+    <Box
+      sx={{
+        bgcolor: 'background.default',
+        border: 1,
+        borderColor: 'divider',
+        borderRadius: 1,
+        minHeight: 92,
+        p: 2,
+      }}
+    >
+      <Typography color="text.secondary" variant="caption">
+        {label}
+      </Typography>
+      <Typography
+        color="text.primary"
+        fontWeight={700}
+        sx={{ mt: 1 }}
+      >
+        {value}
+      </Typography>
+    </Box>
+  )
+}
+
+function formatUserName(email) {
+  return email?.split('@')[0] ?? 'user'
+}
+
+function formatMoney(value) {
+  return Number(value).toLocaleString('en-US', {
+    style: 'currency',
+    currency: 'USD',
+  })
+}
+
+function formatPercent(value) {
+  return `${Number(value).toFixed(2)}%`
+}
+
+function getPnLColor(value) {
+  const amount = Number(value)
+
+  if (amount > 0) {
+    return 'success'
+  }
+
+  if (amount < 0) {
+    return 'error'
+  }
+
+  return 'default'
 }
 
 export default App
