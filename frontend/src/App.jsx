@@ -21,14 +21,29 @@ import {
 
 import {
   buyOrder,
+  depositAccount,
   getAccountSummary,
   getCurrentUser,
   getPortfolio,
   getQuote,
+  getTrades,
   loginUser,
   registerUser,
   sellOrder,
+  withdrawAccount,
 } from './api'
+
+const actionButtonSx = {
+  bgcolor: '#141416',
+  border: 1,
+  borderColor: 'divider',
+  boxShadow: 'none',
+  color: 'text.primary',
+  '&:hover': {
+    bgcolor: '#1f1f23',
+    boxShadow: 'none',
+  },
+}
 
 function App() {
   const [token, setToken] = useState(() => localStorage.getItem('token') ?? '')
@@ -40,9 +55,15 @@ function App() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [summary, setSummary] = useState(null)
   const [portfolio, setPortfolio] = useState([])
+  const [trades, setTrades] = useState([])
   const [user, setUser] = useState(null)
   const [dashboardError, setDashboardError] = useState('')
   const [isDashboardLoading, setIsDashboardLoading] = useState(false)
+  const [accountAction, setAccountAction] = useState('deposit')
+  const [accountAmount, setAccountAmount] = useState('')
+  const [accountMessage, setAccountMessage] = useState('')
+  const [accountError, setAccountError] = useState('')
+  const [isAccountSubmitting, setIsAccountSubmitting] = useState(false)
   const [quoteSymbol, setQuoteSymbol] = useState('AAPL')
   const [quote, setQuote] = useState(null)
   const [quoteError, setQuoteError] = useState('')
@@ -58,13 +79,15 @@ function App() {
     setIsDashboardLoading(true)
 
     try {
-      const [summaryData, portfolioData, userData] = await Promise.all([
+      const [summaryData, portfolioData, tradesData, userData] = await Promise.all([
         getAccountSummary(token),
         getPortfolio(token),
+        getTrades(token),
         getCurrentUser(token),
       ])
       setSummary(summaryData)
       setPortfolio(portfolioData)
+      setTrades(tradesData)
       setUser(userData)
     } catch (err) {
       setDashboardError(err.message)
@@ -117,6 +140,30 @@ function App() {
     }
   }
 
+  async function handleAccountSubmit(event) {
+    event.preventDefault()
+    setAccountMessage('')
+    setAccountError('')
+    setIsAccountSubmitting(true)
+
+    try {
+      const payload = { amount: accountAmount }
+      const data = accountAction === 'deposit'
+        ? await depositAccount(token, payload)
+        : await withdrawAccount(token, payload)
+
+      setAccountAmount('')
+      setAccountMessage(
+        `${accountAction} complete. cash balance: ${formatMoney(data.cash_balance)}`,
+      )
+      await loadDashboard()
+    } catch (err) {
+      setAccountError(err.message)
+    } finally {
+      setIsAccountSubmitting(false)
+    }
+  }
+
   async function handleOrderSubmit(event) {
     event.preventDefault()
     setOrderMessage('')
@@ -149,6 +196,7 @@ function App() {
     setToken('')
     setSummary(null)
     setPortfolio([])
+    setTrades([])
     setUser(null)
     setQuote(null)
     setDashboardError('')
@@ -185,21 +233,21 @@ function App() {
                 <Typography color="text.secondary" component="div" variant="caption">
                   hello, {formatUserName(user?.email)}
                 </Typography>
-                <Button
-                  color="inherit"
-                  onClick={handleLogout}
+                <Box
                   sx={{
-                    display: 'block',
-                    lineHeight: 1.2,
-                    minWidth: 0,
-                    mt: 0.75,
-                    p: 0,
-                    textAlign: 'right',
+                    display: 'flex',
+                    gap: 1.25,
+                    justifyContent: 'flex-end',
+                    mt: 0.5,
                   }}
-                  variant="text"
                 >
-                  logout
-                </Button>
+                  <HeaderAction onClick={loadDashboard} disabled={isDashboardLoading}>
+                    [refresh]
+                  </HeaderAction>
+                  <HeaderAction onClick={handleLogout}>
+                    [logout]
+                  </HeaderAction>
+                </Box>
               </Box>
             </Box>
 
@@ -252,6 +300,59 @@ function App() {
                       </Box>
                     )}
                     {summary && (
+                      <Stack
+                        component="form"
+                        onSubmit={handleAccountSubmit}
+                        spacing={1.25}
+                        sx={{ mt: 1.75 }}
+                      >
+                        <ButtonGroup fullWidth size="small" variant="outlined">
+                          <Button
+                            onClick={() => setAccountAction('deposit')}
+                            type="button"
+                            variant={accountAction === 'deposit' ? 'contained' : 'outlined'}
+                          >
+                            deposit
+                          </Button>
+                          <Button
+                            onClick={() => setAccountAction('withdraw')}
+                            type="button"
+                            variant={accountAction === 'withdraw' ? 'contained' : 'outlined'}
+                          >
+                            withdraw
+                          </Button>
+                        </ButtonGroup>
+                        <Box
+                          sx={{
+                            alignItems: 'end',
+                            display: 'grid',
+                            gap: 1.5,
+                            gridTemplateColumns: { xs: '1fr', sm: '176px auto' },
+                            justifyContent: 'start',
+                          }}
+                        >
+                          <MoneyStepper
+                            onChange={setAccountAmount}
+                            value={accountAmount}
+                          />
+                          <Button
+                            disabled={isAccountSubmitting}
+                            sx={actionButtonSx}
+                            type="submit"
+                            variant="contained"
+                          >
+                            {isAccountSubmitting ? 'saving...' : accountAction}
+                          </Button>
+                        </Box>
+                        {accountMessage && (
+                          <Alert severity="success">{accountMessage}</Alert>
+                        )}
+                        {accountError && (
+                          <Alert severity="error">{accountError}</Alert>
+                        )}
+                      </Stack>
+                    )}
+                    {!summary && (
                       <Box sx={{ display: 'flex', mt: 1.25 }}>
                         <Button
                           disabled={isDashboardLoading}
@@ -309,6 +410,42 @@ function App() {
                                     variant="outlined"
                                   />
                                 </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </TableContainer>
+                    )}
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardContent sx={{ pb: 2.5 }}>
+                    <PanelHeader title="trade history" />
+                    {trades.length === 0 ? (
+                      <Typography color="text.secondary" variant="body2">
+                        no trades yet.
+                      </Typography>
+                    ) : (
+                      <TableContainer>
+                        <Table size="small">
+                          <TableHead>
+                            <TableRow>
+                              <TableCell>side</TableCell>
+                              <TableCell>symbol</TableCell>
+                              <TableCell>qty</TableCell>
+                              <TableCell>price</TableCell>
+                              <TableCell>date</TableCell>
+                            </TableRow>
+                          </TableHead>
+                          <TableBody>
+                            {trades.map((trade) => (
+                              <TableRow key={`${trade.created_at}-${trade.symbol}-${trade.side}`}>
+                                <TableCell>{trade.side}</TableCell>
+                                <TableCell>{trade.symbol}</TableCell>
+                                <TableCell>{trade.quantity}</TableCell>
+                                <TableCell>{formatMoney(trade.price)}</TableCell>
+                                <TableCell>{formatDateTime(trade.created_at)}</TableCell>
                               </TableRow>
                             ))}
                           </TableBody>
@@ -419,17 +556,7 @@ function App() {
                         </Box>
                         <Button
                           disabled={isOrderSubmitting}
-                          sx={{
-                            bgcolor: '#141416',
-                            border: 1,
-                            borderColor: 'divider',
-                            color: 'text.primary',
-                            boxShadow: 'none',
-                            '&:hover': {
-                              bgcolor: '#1f1f23',
-                              boxShadow: 'none',
-                            },
-                          }}
+                          sx={actionButtonSx}
                           type="submit"
                           variant="contained"
                         >
@@ -554,6 +681,25 @@ function PanelHeader({ title }) {
   )
 }
 
+function HeaderAction({ children, disabled = false, onClick }) {
+  return (
+    <Button
+      color="inherit"
+      disabled={disabled}
+      onClick={onClick}
+      sx={{
+        fontSize: '0.68rem',
+        lineHeight: 1,
+        minWidth: 0,
+        p: 0,
+      }}
+      variant="text"
+    >
+      {children}
+    </Button>
+  )
+}
+
 function QuantityStepper({ onChange, value }) {
   const quantity = Math.max(1, Number(value) || 1)
 
@@ -582,6 +728,69 @@ function QuantityStepper({ onChange, value }) {
           +
         </Button>
       </ButtonGroup>
+    </Stack>
+  )
+}
+
+function MoneyStepper({ onChange, value }) {
+  const amount = Math.max(0, Number(value) || 0)
+
+  function updateAmount(nextAmount) {
+    onChange(nextAmount.toFixed(2))
+  }
+
+  return (
+    <Stack spacing={0.5} sx={{ width: { xs: '100%', sm: 176 } }}>
+      <Typography color="text.secondary" variant="caption">
+        amount
+      </Typography>
+      <Box
+        sx={{
+          border: 1,
+          borderColor: 'divider',
+          borderRadius: 1,
+          display: 'grid',
+          gridTemplateColumns: '44px 1fr 44px',
+          height: 35,
+          overflow: 'hidden',
+        }}
+      >
+        <Button
+          onClick={() => updateAmount(Math.max(0, amount - 10))}
+          sx={{ borderRadius: 0, minWidth: 0 }}
+          type="button"
+        >
+          -
+        </Button>
+        <Box
+          component="input"
+          inputMode="decimal"
+          onChange={(event) => onChange(event.target.value)}
+          placeholder="0.00"
+          sx={{
+            bgcolor: 'transparent',
+            border: 0,
+            borderLeft: 1,
+            borderRight: 1,
+            borderColor: 'divider',
+            color: 'text.primary',
+            font: 'inherit',
+            outline: 0,
+            px: 1,
+            textAlign: 'center',
+            width: '100%',
+          }}
+          type="text"
+          value={value}
+        />
+        <Button
+          onClick={() => updateAmount(amount + 10)}
+          sx={{ borderRadius: 0, minWidth: 0 }}
+          type="button"
+        >
+          +
+        </Button>
+      </Box>
     </Stack>
   )
 }
@@ -625,6 +834,15 @@ function formatMoney(value) {
 
 function formatPercent(value) {
   return `${Number(value).toFixed(2)}%`
+}
+
+function formatDateTime(value) {
+  return new Date(value).toLocaleString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  })
 }
 
 function getPnLColor(value) {

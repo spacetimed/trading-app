@@ -1,13 +1,19 @@
-2026-05-14
+2026-05-15
 
 next
-    [ ] add deposit form to dashboard
-    [ ] add withdraw form to dashboard
-    [ ] fetch and display trade history
-    [ ] refresh account summary and portfolio after deposit/withdraw
-    [ ] show simple success/error messages for account actions
+    [ ] add loading states for dashboard forms
+    [ ] add frontend empty/error states pass
+    [ ] add README section for running frontend/backend with Makefile
+    [ ] manually test frontend deposit -> buy -> sell -> withdraw flow
+    [ ] decide whether to add redis quote cache next
 
 complete
+    [x] fetch and display trade history
+    [x] add deposit form to dashboard
+    [x] add withdraw form to dashboard
+    [x] refresh account summary and portfolio after deposit/withdraw
+    [x] show simple success/error messages for account actions
+    [x] add root Makefile for common dev commands
     [x] install mui for frontend components
     [x] replace custom auth css with mui theme styling
     [x] add dark dashboard layout

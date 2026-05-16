@@ -52,8 +52,36 @@ export function getAccountSummary(token) {
   })
 }
 
+export function depositAccount(token, payload) {
+  return request('/account/deposit', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(payload),
+  })
+}
+
+export function withdrawAccount(token, payload) {
+  return request('/account/withdraw', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(payload),
+  })
+}
+
 export function getPortfolio(token) {
   return request('/portfolio', {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+}
+
+export function getTrades(token) {
+  return request('/trades', {
     headers: {
       Authorization: `Bearer ${token}`,
     },
