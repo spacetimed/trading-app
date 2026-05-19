@@ -1,13 +1,19 @@
-2026-05-15
+2026-05-18
 
 next
-    [ ] add loading states for dashboard forms
-    [ ] add frontend empty/error states pass
-    [ ] add README section for running frontend/backend with Makefile
-    [ ] manually test frontend deposit -> buy -> sell -> withdraw flow
-    [ ] decide whether to add redis quote cache next
+    [ ] install redis python dependency
+    [ ] add redis connection helper
+    [ ] cache quote responses for a short ttl
+    [ ] add quote cache tests
+    [ ] add docker compose for postgres and redis
+    [ ] move secret key and database url into environment variables
 
 complete
+    [x] add loading states for dashboard forms
+    [x] add frontend empty/error states pass
+    [x] add README section for running frontend/backend with Makefile
+    [x] add frontend manual smoke test checklist to README
+    [x] decide whether to add redis quote cache next
     [x] fetch and display trade history
     [x] add deposit form to dashboard
     [x] add withdraw form to dashboard

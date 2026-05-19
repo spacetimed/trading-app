@@ -2,7 +2,7 @@
 
 A full-stack paper-trading app for practicing stock trading with virtual cash. Users will be able to create an account, manage a cash balance, place simulated market orders using real quote data, and track their portfolio, trade history, account value, and profit/loss over time.
 
-This is intended as an MVP first, with the backend logic built out before adding more polished frontend and deployment work.
+This is intended as an MVP first, with the core backend and frontend flows built before adding deployment and production-style infrastructure.
 
 ## MVP Scope
 
@@ -14,27 +14,59 @@ Users should be able to:
 - place simulated market buy and sell orders
 - view cash balance, positions, trade history, and PnL
 
-## Planned Stack
+## Stack
 
-- Frontend: React, TypeScript, Vite
-- Backend: FastAPI
+- Frontend: React, Vite, MUI
+- Backend: FastAPI, SQLAlchemy
 - Database: PostgreSQL
-- Cache: Redis for quote caching
+- Cache: Redis for quote caching, planned
 - Auth: JWT-based authentication
-- Deployment: Docker, AWS
+- Deployment: Docker and a free hosting target, planned
+
+## Local Development
+
+Common commands are exposed from the root `Makefile`.
+
+Start the backend:
+
+```bash
+make backend
+```
+
+Start the frontend:
+
+```bash
+make frontend
+```
+
+Run backend tests and frontend checks:
+
+```bash
+make test
+```
+
+Other available checks:
+
+```bash
+make test-backend
+make lint-frontend
+make build-frontend
+make test-frontend
+```
 
 ## Market Data
 
-For the MVP, quote data will use Stooq as the first real provider because it is free and does not require an API key. Stooq returns CSV data, and US symbols use a provider-specific suffix like `AAPL.US`.
+For the MVP, quote data uses free providers without API keys. The app tries Yahoo Finance chart data first, falls back to Stooq CSV data, and then falls back to a small local fake quote list for supported symbols during outages or local testing. Redis quote caching is planned so repeated quote requests can avoid unnecessary external calls.
 
 ## Frontend
 
-Planned screens and flows:
+Current screens and flows:
 
 - login/register pages for authentication
 - dashboard for account summary, positions, trade history, and PnL
 - forms for deposit, withdraw, buy, and sell actions
-- polling-based price updates for the MVP
+- quote lookup
+- loading, empty, and error states for the main dashboard flows
 
 ## Backend
 
@@ -47,6 +79,19 @@ The backend will expose REST endpoints and handle the main application rules:
 - fetch real market quote data
 - cache quote data where useful
 - write account, trade, and position changes to the database
+
+## Manual Smoke Test
+
+After starting the backend and frontend, a basic frontend flow is:
+
+- register or log in
+- deposit virtual cash
+- look up a stock symbol
+- buy shares
+- verify cash, positions, and trade history update
+- sell shares
+- withdraw cash
+- verify account summary updates
 
 ## Data Model
 
@@ -146,15 +191,18 @@ Auth tests:
 - [x] Add basic register tests
 - [x] Implement `/auth/login`
 - [x] Add basic login tests
-- [ ] Add JWT access tokens
-- [ ] Add `/auth/me`
-- [ ] Implement deposit and withdraw endpoints
-- [ ] Integrate market data API and quote endpoint
-- [ ] Implement buy and sell endpoints
-- [ ] Implement portfolio and trades endpoints
-- [ ] Build frontend login/register flow
-- [ ] Build dashboard and trading forms
+- [x] Add JWT access tokens
+- [x] Add `/auth/me`
+- [x] Implement deposit and withdraw endpoints
+- [x] Integrate market data API and quote endpoint
+- [x] Implement buy and sell endpoints
+- [x] Implement portfolio and trades endpoints
+- [x] Build frontend login/register flow
+- [x] Build dashboard and trading forms
+- [ ] Add Redis quote caching
+- [ ] Dockerize local development
+- [ ] Deploy MVP
 
 ## Notes
 
-The current focus is getting the backend behavior correct in small pieces. Some implementation details are intentionally simple for now and should be revisited later, especially password hashing, token handling, migrations, and deployment.
+The current focus is moving from MVP behavior into production-style polish. Some implementation details are intentionally simple for now and should be revisited later, especially password hashing, database migrations, environment-based configuration, Redis caching, Docker, and deployment.

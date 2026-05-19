@@ -67,6 +67,7 @@ function App() {
   const [quoteSymbol, setQuoteSymbol] = useState('AAPL')
   const [quote, setQuote] = useState(null)
   const [quoteError, setQuoteError] = useState('')
+  const [isQuoteLoading, setIsQuoteLoading] = useState(false)
   const [orderSide, setOrderSide] = useState('buy')
   const [orderSymbol, setOrderSymbol] = useState('AAPL')
   const [orderQuantity, setOrderQuantity] = useState(1)
@@ -129,14 +130,20 @@ function App() {
     event.preventDefault()
     setQuote(null)
     setQuoteError('')
+    setIsQuoteLoading(true)
 
     try {
       const symbol = quoteSymbol.trim().toUpperCase()
+      if (!symbol) {
+        throw new Error('symbol is required')
+      }
       const data = await getQuote(symbol)
       setQuoteSymbol(symbol)
       setQuote(data)
     } catch (err) {
       setQuoteError(err.message)
+    } finally {
+      setIsQuoteLoading(false)
     }
   }
 
@@ -147,6 +154,9 @@ function App() {
     setIsAccountSubmitting(true)
 
     try {
+      if (!accountAmount) {
+        throw new Error('amount is required')
+      }
       const payload = { amount: accountAmount }
       const data = accountAction === 'deposit'
         ? await depositAccount(token, payload)
@@ -171,8 +181,12 @@ function App() {
     setIsOrderSubmitting(true)
 
     try {
+      const symbol = orderSymbol.trim().toUpperCase()
+      if (!symbol) {
+        throw new Error('symbol is required')
+      }
       const payload = {
-        symbol: orderSymbol.trim().toUpperCase(),
+        symbol,
         quantity: Math.max(1, Number(orderQuantity)),
       }
       const data = orderSide === 'buy'
@@ -336,7 +350,7 @@ function App() {
                             value={accountAmount}
                           />
                           <Button
-                            disabled={isAccountSubmitting}
+                            disabled={isAccountSubmitting || !accountAmount}
                             sx={actionButtonSx}
                             type="submit"
                             variant="contained"
@@ -478,8 +492,12 @@ function App() {
                           size="small"
                           value={quoteSymbol}
                         />
-                        <Button type="submit" variant="contained">
-                          quote
+                        <Button
+                          disabled={isQuoteLoading || !quoteSymbol.trim()}
+                          type="submit"
+                          variant="contained"
+                        >
+                          {isQuoteLoading ? 'loading...' : 'quote'}
                         </Button>
                       </Box>
 
@@ -555,7 +573,7 @@ function App() {
                           />
                         </Box>
                         <Button
-                          disabled={isOrderSubmitting}
+                          disabled={isOrderSubmitting || !orderSymbol.trim()}
                           sx={actionButtonSx}
                           type="submit"
                           variant="contained"
