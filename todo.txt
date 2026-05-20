@@ -1,4 +1,4 @@
-2026-05-18
+2026-05-19
 
 next
     [ ] install redis python dependency
@@ -9,6 +9,7 @@ next
     [ ] move secret key and database url into environment variables
 
 complete
+    [x] document redis quote cache blueprint
     [x] add loading states for dashboard forms
     [x] add frontend empty/error states pass
     [x] add README section for running frontend/backend with Makefile

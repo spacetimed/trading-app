@@ -58,6 +58,34 @@ make test-frontend
 
 For the MVP, quote data uses free providers without API keys. The app tries Yahoo Finance chart data first, falls back to Stooq CSV data, and then falls back to a small local fake quote list for supported symbols during outages or local testing. Redis quote caching is planned so repeated quote requests can avoid unnecessary external calls.
 
+## Planned Redis Cache
+
+Redis will be used as a short-lived cache for market quotes. The goal is not to make prices stale for long periods; it is to avoid repeatedly calling external quote providers for the same symbol during normal dashboard usage.
+
+Planned cache behavior:
+
+- cache key format: `quote:{symbol}`, such as `quote:AAPL`
+- cached value: latest quote price and provider metadata
+- TTL: 30-60 seconds
+- cache hit: return the cached quote immediately
+- cache miss: fetch from Yahoo/Stooq, store in Redis, then return the quote
+- provider failure: fall back to the next provider or local fake quote data
+
+Quote request flow:
+
+```txt
+client
+  -> GET /market/quote/{symbol}
+  -> FastAPI quote endpoint
+  -> check Redis for quote:{symbol}
+      -> hit: return cached price
+      -> miss: fetch external quote provider
+          -> store result in Redis with short TTL
+          -> return fresh price
+```
+
+This gives Redis a practical role in the app without changing the trading rules. Orders still use the quote service as the single place for pricing, and the cache remains small, temporary, and safe to rebuild at any time.
+
 ## Frontend
 
 Current screens and flows:
