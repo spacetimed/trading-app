@@ -13,6 +13,7 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jwt import InvalidTokenError
 from sqlalchemy.orm import Session
 
+from cache import get_cached_quote, set_cached_quote
 from db import engine, get_db
 from models import (
     Base,
@@ -107,12 +108,22 @@ def get_current_user(
 
 
 def get_quote_price(symbol: str) -> Decimal | None:
+    symbol = symbol.strip().upper()
+    cached_price = get_cached_quote(symbol)
+
+    if cached_price is not None:
+        try:
+            return Decimal(cached_price)
+        except InvalidOperation:
+            pass
+
     try:
         yahoo_price = get_yahoo_quote_price(symbol)
     except Exception:
         yahoo_price = None
 
     if yahoo_price is not None:
+        set_cached_quote(symbol, str(yahoo_price))
         return yahoo_price
 
     try:
@@ -121,9 +132,14 @@ def get_quote_price(symbol: str) -> Decimal | None:
         stooq_price = None
 
     if stooq_price is not None:
+        set_cached_quote(symbol, str(stooq_price))
         return stooq_price
 
-    return FAKE_QUOTES.get(symbol)
+    fake_quote = FAKE_QUOTES.get(symbol)
+    if fake_quote is not None:
+        set_cached_quote(symbol, str(fake_quote))
+
+    return fake_quote
 
 
 def build_yahoo_quote_url(symbol: str) -> str:

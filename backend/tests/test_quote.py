@@ -25,7 +25,12 @@ class QuoteTests(unittest.TestCase):
             ("msft", "MSFT", Decimal("425.00")),
         ]
 
-        with patch("main.get_stooq_quote_price", return_value=None):
+        with (
+            patch("main.get_cached_quote", return_value=None),
+            patch("main.get_yahoo_quote_price", return_value=None),
+            patch("main.get_stooq_quote_price", return_value=None),
+            patch("main.set_cached_quote"),
+        ):
             for input_symbol, expected_symbol, expected_price in cases:
                 response = get_quote(input_symbol)
 
@@ -33,14 +38,23 @@ class QuoteTests(unittest.TestCase):
                 self.assertEqual(response["price"], expected_price)
 
     def test_quote_returns_stooq_price_when_available(self):
-        with patch("main.get_stooq_quote_price", return_value=Decimal("276.873")):
+        with (
+            patch("main.get_cached_quote", return_value=None),
+            patch("main.get_yahoo_quote_price", return_value=None),
+            patch("main.get_stooq_quote_price", return_value=Decimal("276.873")),
+            patch("main.set_cached_quote"),
+        ):
             response = get_quote("aapl")
 
         self.assertEqual(response["symbol"], "AAPL")
         self.assertEqual(response["price"], Decimal("276.873"))
 
     def test_quote_rejects_unsupported_symbol(self):
-        with patch("main.get_stooq_quote_price", return_value=None):
+        with (
+            patch("main.get_cached_quote", return_value=None),
+            patch("main.get_yahoo_quote_price", return_value=None),
+            patch("main.get_stooq_quote_price", return_value=None),
+        ):
             with self.assertRaises(HTTPException) as context:
                 get_quote("zzzz")
 

@@ -19,7 +19,7 @@ Users should be able to:
 - Frontend: React, Vite, MUI
 - Backend: FastAPI, SQLAlchemy
 - Database: PostgreSQL
-- Cache: Redis for quote caching, planned
+- Cache: Redis for quote caching
 - Auth: JWT-based authentication
 - Deployment: Docker and a free hosting target, planned
 
@@ -56,11 +56,11 @@ make test-frontend
 
 ## Market Data
 
-For the MVP, quote data uses free providers without API keys. The app tries Yahoo Finance chart data first, falls back to Stooq CSV data, and then falls back to a small local fake quote list for supported symbols during outages or local testing. Redis quote caching is planned so repeated quote requests can avoid unnecessary external calls.
+For the MVP, quote data uses free providers without API keys. The app tries Yahoo Finance chart data first, falls back to Stooq CSV data, and then falls back to a small local fake quote list for supported symbols during outages or local testing. Redis quote caching avoids repeated external calls for the same symbol during normal dashboard usage.
 
-## Planned Redis Cache
+## Redis Cache
 
-Redis will be used as a short-lived cache for market quotes. The goal is not to make prices stale for long periods; it is to avoid repeatedly calling external quote providers for the same symbol during normal dashboard usage.
+Redis is used as a short-lived cache for market quotes. The goal is not to make prices stale for long periods; it is to avoid repeatedly calling external quote providers for the same symbol during normal dashboard usage.
 
 Planned cache behavior:
 
@@ -227,7 +227,7 @@ Auth tests:
 - [x] Implement portfolio and trades endpoints
 - [x] Build frontend login/register flow
 - [x] Build dashboard and trading forms
-- [ ] Add Redis quote caching
+- [x] Add Redis quote caching
 - [ ] Dockerize local development
 - [ ] Deploy MVP
 

@@ -1,14 +1,17 @@
-2026-05-19
+2026-05-20
 
 next
-    [ ] install redis python dependency
-    [ ] add redis connection helper
-    [ ] cache quote responses for a short ttl
-    [ ] add quote cache tests
     [ ] add docker compose for postgres and redis
     [ ] move secret key and database url into environment variables
+    [ ] document REDIS_URL environment variable
+    [ ] manually test quote endpoint with redis running
 
 complete
+    [x] install redis python dependency
+    [x] add backend requirements file
+    [x] add redis connection helper
+    [x] cache quote responses for a short ttl
+    [x] add quote cache tests
     [x] document redis quote cache blueprint
     [x] add loading states for dashboard forms
     [x] add frontend empty/error states pass
