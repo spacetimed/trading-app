@@ -1,12 +1,20 @@
-2026-05-20
+2026-05-24
 
 next
-    [ ] add docker compose for postgres and redis
-    [ ] move secret key and database url into environment variables
-    [ ] document REDIS_URL environment variable
-    [ ] manually test quote endpoint with redis running
+    [ ] add backend Dockerfile
+    [ ] add frontend production build/deploy notes
+    [ ] choose free deployment target
+    [ ] document deployment environment variables
 
 complete
+    [x] add docker compose for postgres and redis
+    [x] add make targets for docker compose infra
+    [x] add automated quote endpoint cache test
+    [x] move secret key and database url into environment variables
+    [x] add backend .env.example
+    [x] document backend environment variables in README
+    [x] document REDIS_URL environment variable
+    [x] run tests with explicit test env variables
     [x] install redis python dependency
     [x] add backend requirements file
     [x] add redis connection helper

@@ -14,6 +14,7 @@ from jwt import InvalidTokenError
 from sqlalchemy.orm import Session
 
 from cache import get_cached_quote, set_cached_quote
+from config import required_env
 from db import engine, get_db
 from models import (
     Base,
@@ -57,7 +58,7 @@ security = HTTPBearer()
 
 
 # constants
-SECRET_KEY = "dev-key-i-will-change-this-later-lol"
+SECRET_KEY = required_env("SECRET_KEY")
 ALGORITHM = "HS256"
 TOKEN_EXPIRE_MINS = 30
 

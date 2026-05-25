@@ -27,6 +27,42 @@ Users should be able to:
 
 Common commands are exposed from the root `Makefile`.
 
+The backend requires environment variables for local development and deployment. Copy the example file and fill in local values:
+
+```bash
+cp backend/.env.example backend/.env
+```
+
+Required backend variables:
+
+```txt
+DATABASE_URL=postgresql://username:password@localhost:5432/trading_app
+REDIS_URL=redis://localhost:6379/0
+SECRET_KEY=replace-me-with-a-long-random-secret
+```
+
+The application intentionally does not provide code-level defaults for these values. If a required variable is missing, backend startup fails with a clear configuration error.
+`make backend` loads `backend/.env` when that file exists.
+
+Docker Compose can start local Postgres and Redis services:
+
+```bash
+make infra
+```
+
+The Compose Postgres service maps to local port `5433` to avoid conflicting with a Homebrew Postgres running on `5432`. If using the Compose database, set:
+
+```txt
+DATABASE_URL=postgresql://trading_app:trading_app@localhost:5433/trading_app
+REDIS_URL=redis://localhost:6379/0
+```
+
+Stop the Compose services:
+
+```bash
+make infra-down
+```
+
 Start the backend:
 
 ```bash

@@ -1,7 +1,8 @@
+from config import required_env
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-DATABASE_URL = "postgresql://0x@localhost:5432/trading_app"
+DATABASE_URL = required_env("DATABASE_URL")
 engine = create_engine(DATABASE_URL)
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)

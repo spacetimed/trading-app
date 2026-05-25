@@ -1,9 +1,9 @@
-import os
-
 import redis
 
+from config import required_env
 
-REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
+
+REDIS_URL = required_env("REDIS_URL")
 QUOTE_CACHE_TTL_SECONDS = 60
 
 

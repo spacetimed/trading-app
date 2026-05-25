@@ -49,6 +49,19 @@ class QuoteTests(unittest.TestCase):
         self.assertEqual(response["symbol"], "AAPL")
         self.assertEqual(response["price"], Decimal("276.873"))
 
+    def test_quote_returns_cached_price_when_available(self):
+        with (
+            patch("main.get_cached_quote", return_value="999.99"),
+            patch("main.get_yahoo_quote_price") as yahoo_quote,
+            patch("main.get_stooq_quote_price") as stooq_quote,
+        ):
+            response = get_quote("aapl")
+
+        self.assertEqual(response["symbol"], "AAPL")
+        self.assertEqual(response["price"], Decimal("999.99"))
+        yahoo_quote.assert_not_called()
+        stooq_quote.assert_not_called()
+
     def test_quote_rejects_unsupported_symbol(self):
         with (
             patch("main.get_cached_quote", return_value=None),
