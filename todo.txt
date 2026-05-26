@@ -1,12 +1,18 @@
 2026-05-24
 
 next
-    [ ] add backend Dockerfile
-    [ ] add frontend production build/deploy notes
-    [ ] choose free deployment target
-    [ ] document deployment environment variables
+    [ ] create Vercel project for frontend
+    [ ] create Render service for backend
+    [ ] create Supabase Postgres database
+    [ ] create Upstash Redis database
+    [ ] add Vercel frontend origin to backend CORS config
 
 complete
+    [x] add backend Dockerfile
+    [x] add backend .dockerignore
+    [x] add frontend production build/deploy notes
+    [x] choose free deployment target
+    [x] document deployment environment variables
     [x] add docker compose for postgres and redis
     [x] add make targets for docker compose infra
     [x] add automated quote endpoint cache test

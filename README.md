@@ -21,7 +21,7 @@ Users should be able to:
 - Database: PostgreSQL
 - Cache: Redis for quote caching
 - Auth: JWT-based authentication
-- Deployment: Docker and a free hosting target, planned
+- Deployment: Vercel frontend, Render backend, Supabase Postgres, Upstash Redis, planned
 
 ## Local Development
 
@@ -89,6 +89,39 @@ make lint-frontend
 make build-frontend
 make test-frontend
 ```
+
+## Deployment Plan
+
+The planned MVP deployment split is:
+
+- Frontend: Vercel
+- Backend: Render web service
+- Database: Supabase Postgres
+- Cache: Upstash Redis
+
+Vercel will host the built React/Vite frontend. The frontend will call the Render backend through `VITE_API_URL`.
+
+Render will run the FastAPI backend. The backend can be deployed as a Python service or from [backend/Dockerfile](backend/Dockerfile). Render should receive production environment variables for `DATABASE_URL`, `REDIS_URL`, and `SECRET_KEY`.
+
+Supabase will provide the hosted Postgres database. Upstash will provide the hosted Redis-compatible cache for quote responses.
+
+Deployment environment variables:
+
+Frontend:
+
+```txt
+VITE_API_URL=https://your-render-backend-url
+```
+
+Backend:
+
+```txt
+DATABASE_URL=postgresql://...
+REDIS_URL=rediss://...
+SECRET_KEY=replace-me-with-a-long-random-secret
+```
+
+The backend CORS configuration currently allows local Vite origins. Before production deployment, add the Vercel frontend origin to the backend CORS allowlist.
 
 ## Market Data
 
