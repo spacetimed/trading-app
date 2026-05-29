@@ -2,6 +2,7 @@
 export DATABASE_URL="postgresql://test:test@localhost:5432/test"
 export REDIS_URL="redis://localhost:6379/15"
 export SECRET_KEY="test-secret-key-with-at-least-32-bytes"
+export FRONTEND_ORIGIN="http://localhost:5173"
 
 venv/bin/python -m unittest -v \
   ./tests/test_register_and_login.py \

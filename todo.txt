@@ -1,13 +1,14 @@
-2026-05-24
+2026-05-28
 
 next
     [ ] create Vercel project for frontend
     [ ] create Render service for backend
     [ ] create Supabase Postgres database
     [ ] create Upstash Redis database
-    [ ] add Vercel frontend origin to backend CORS config
 
 complete
+    [x] add Vercel frontend origin to backend CORS config
+    [x] document FRONTEND_ORIGIN environment variable
     [x] add backend Dockerfile
     [x] add backend .dockerignore
     [x] add frontend production build/deploy notes

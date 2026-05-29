@@ -39,6 +39,7 @@ Required backend variables:
 DATABASE_URL=postgresql://username:password@localhost:5432/trading_app
 REDIS_URL=redis://localhost:6379/0
 SECRET_KEY=replace-me-with-a-long-random-secret
+FRONTEND_ORIGIN=http://localhost:5173
 ```
 
 The application intentionally does not provide code-level defaults for these values. If a required variable is missing, backend startup fails with a clear configuration error.
@@ -101,7 +102,7 @@ The planned MVP deployment split is:
 
 Vercel will host the built React/Vite frontend. The frontend will call the Render backend through `VITE_API_URL`.
 
-Render will run the FastAPI backend. The backend can be deployed as a Python service or from [backend/Dockerfile](backend/Dockerfile). Render should receive production environment variables for `DATABASE_URL`, `REDIS_URL`, and `SECRET_KEY`.
+Render will run the FastAPI backend. The backend can be deployed as a Python service or from [backend/Dockerfile](backend/Dockerfile). Render should receive production environment variables for `DATABASE_URL`, `REDIS_URL`, `SECRET_KEY`, and `FRONTEND_ORIGIN`.
 
 Supabase will provide the hosted Postgres database. Upstash will provide the hosted Redis-compatible cache for quote responses.
 
@@ -119,9 +120,10 @@ Backend:
 DATABASE_URL=postgresql://...
 REDIS_URL=rediss://...
 SECRET_KEY=replace-me-with-a-long-random-secret
+FRONTEND_ORIGIN=https://trading-app-demo-spacetimed.vercel.app
 ```
 
-The backend CORS configuration currently allows local Vite origins. Before production deployment, add the Vercel frontend origin to the backend CORS allowlist.
+The backend CORS configuration always allows local Vite origins and also allows the comma-separated origins listed in `FRONTEND_ORIGIN`.
 
 ## Market Data
 
