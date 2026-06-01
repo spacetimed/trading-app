@@ -1,33 +1,41 @@
 # Trading Application
 
-A full-stack paper-trading app for practicing stock trading with virtual cash. Users will be able to create an account, manage a cash balance, place simulated market orders using real quote data, and track their portfolio, trade history, account value, and profit/loss over time.
+A full-stack paper-trading app for simulated stock trading with virtual cash.
 
-This is intended as an MVP first, with the core backend and frontend flows built before adding deployment and production-style infrastructure.
+Users can register, log in, deposit and withdraw cash, look up stock quotes, place buy/sell orders, and track positions, trade history, and unrealized PnL.
 
-## MVP Scope
+## Demo
 
-Users should be able to:
+- Frontend: <https://trading-app-demo-spacetimed.vercel.app>
+- Backend health: <https://trading-app-backend-ulze.onrender.com/health>
 
-- register and log in
-- deposit and withdraw virtual cash
-- look up a stock symbol and view a current price
-- place simulated market buy and sell orders
-- view cash balance, positions, trade history, and PnL
+The backend runs on Render's free tier, so the first request after inactivity can be slow.
 
 ## Stack
 
 - Frontend: React, Vite, MUI
 - Backend: FastAPI, SQLAlchemy
 - Database: PostgreSQL
-- Cache: Redis for quote caching
-- Auth: JWT-based authentication
-- Deployment: Vercel frontend, Render backend, Supabase Postgres, Upstash Redis, planned
+- Cache: Redis
+- Auth: JWT
+- Deployment: Vercel, Render, Supabase, Upstash
+
+## Features
+
+- Email/password registration and login
+- JWT-protected account, portfolio, order, and trade endpoints
+- Virtual cash deposits and withdrawals
+- Quote lookup using Yahoo Finance, Stooq, and local fallback data
+- Redis quote caching with a short TTL
+- Simulated market buy and sell orders
+- Position tracking with average cost
+- Portfolio market value and unrealized PnL
+- Trade history
+- React dashboard for the main trading flow
 
 ## Local Development
 
-Common commands are exposed from the root `Makefile`.
-
-The backend requires environment variables for local development and deployment. Copy the example file and fill in local values:
+Copy the backend environment example:
 
 ```bash
 cp backend/.env.example backend/.env
@@ -42,266 +50,108 @@ SECRET_KEY=replace-me-with-a-long-random-secret
 FRONTEND_ORIGIN=http://localhost:5173
 ```
 
-The application intentionally does not provide code-level defaults for these values. If a required variable is missing, backend startup fails with a clear configuration error.
-`make backend` loads `backend/.env` when that file exists.
+The backend does not provide code-level defaults for required configuration. Missing variables fail startup.
 
-Docker Compose can start local Postgres and Redis services:
+Start local Postgres and Redis with Docker Compose:
 
 ```bash
 make infra
 ```
 
-The Compose Postgres service maps to local port `5433` to avoid conflicting with a Homebrew Postgres running on `5432`. If using the Compose database, set:
+The Compose Postgres service uses port `5433` to avoid conflicting with a local Postgres on `5432`.
 
 ```txt
 DATABASE_URL=postgresql://trading_app:trading_app@localhost:5433/trading_app
 REDIS_URL=redis://localhost:6379/0
 ```
 
-Stop the Compose services:
-
-```bash
-make infra-down
-```
-
-Start the backend:
+Run the app:
 
 ```bash
 make backend
-```
-
-Start the frontend:
-
-```bash
 make frontend
 ```
 
-Run backend tests and frontend checks:
+Run checks:
 
 ```bash
 make test
 ```
 
-Other available checks:
+Other commands:
 
 ```bash
 make test-backend
 make lint-frontend
 make build-frontend
 make test-frontend
+make infra-down
 ```
 
-## Deployment Plan
+## Deployment
 
-The planned MVP deployment split is:
+Production services:
 
-- Frontend: Vercel
-- Backend: Render web service
-- Database: Supabase Postgres
-- Cache: Upstash Redis
+- Vercel hosts the React/Vite frontend
+- Render runs the FastAPI backend from `backend/Dockerfile`
+- Supabase hosts Postgres
+- Upstash hosts Redis
 
-Vercel will host the built React/Vite frontend. The frontend will call the Render backend through `VITE_API_URL`.
-
-Render will run the FastAPI backend. The backend can be deployed as a Python service or from [backend/Dockerfile](backend/Dockerfile). Render should receive production environment variables for `DATABASE_URL`, `REDIS_URL`, `SECRET_KEY`, and `FRONTEND_ORIGIN`.
-
-Supabase will provide the hosted Postgres database. Upstash will provide the hosted Redis-compatible cache for quote responses.
-
-Deployment environment variables:
-
-Frontend:
+Frontend environment:
 
 ```txt
-VITE_API_URL=https://your-render-backend-url
+VITE_API_URL=https://trading-app-backend-ulze.onrender.com
 ```
 
-Backend:
+Backend environment:
 
 ```txt
 DATABASE_URL=postgresql://...
 REDIS_URL=rediss://...
-SECRET_KEY=replace-me-with-a-long-random-secret
+SECRET_KEY=...
 FRONTEND_ORIGIN=https://trading-app-demo-spacetimed.vercel.app
 ```
 
-The backend CORS configuration always allows local Vite origins and also allows the comma-separated origins listed in `FRONTEND_ORIGIN`.
-
-## Market Data
-
-For the MVP, quote data uses free providers without API keys. The app tries Yahoo Finance chart data first, falls back to Stooq CSV data, and then falls back to a small local fake quote list for supported symbols during outages or local testing. Redis quote caching avoids repeated external calls for the same symbol during normal dashboard usage.
-
-## Redis Cache
-
-Redis is used as a short-lived cache for market quotes. The goal is not to make prices stale for long periods; it is to avoid repeatedly calling external quote providers for the same symbol during normal dashboard usage.
-
-Planned cache behavior:
-
-- cache key format: `quote:{symbol}`, such as `quote:AAPL`
-- cached value: latest quote price and provider metadata
-- TTL: 30-60 seconds
-- cache hit: return the cached quote immediately
-- cache miss: fetch from Yahoo/Stooq, store in Redis, then return the quote
-- provider failure: fall back to the next provider or local fake quote data
-
-Quote request flow:
-
-```txt
-client
-  -> GET /market/quote/{symbol}
-  -> FastAPI quote endpoint
-  -> check Redis for quote:{symbol}
-      -> hit: return cached price
-      -> miss: fetch external quote provider
-          -> store result in Redis with short TTL
-          -> return fresh price
-```
-
-This gives Redis a practical role in the app without changing the trading rules. Orders still use the quote service as the single place for pricing, and the cache remains small, temporary, and safe to rebuild at any time.
-
-## Frontend
-
-Current screens and flows:
-
-- login/register pages for authentication
-- dashboard for account summary, positions, trade history, and PnL
-- forms for deposit, withdraw, buy, and sell actions
-- quote lookup
-- loading, empty, and error states for the main dashboard flows
-
-## Backend
-
-The backend will expose REST endpoints and handle the main application rules:
-
-- validate request bodies and user input
-- create and authenticate users
-- apply account rules, such as sufficient cash for buys
-- apply position rules, such as sufficient shares for sells
-- fetch real market quote data
-- cache quote data where useful
-- write account, trade, and position changes to the database
-
-## Manual Smoke Test
-
-After starting the backend and frontend, a basic frontend flow is:
-
-- register or log in
-- deposit virtual cash
-- look up a stock symbol
-- buy shares
-- verify cash, positions, and trade history update
-- sell shares
-- withdraw cash
-- verify account summary updates
-
-## Data Model
-
-Initial database tables:
-
-### Users
-
-- id
-- email
-- password
-- created_at
-
-### Transactions
-
-Cash deposits and withdrawals.
-
-- id
-- user_id
-- type: deposit or withdraw
-- amount
-
-### Trades
-
-Executed simulated orders.
-
-- id
-- user_id
-- symbol
-- side: buy or sell
-- quantity
-- price
-
-### Positions
-
-Current holdings per user and symbol.
-
-- id
-- user_id
-- symbol
-- quantity
-- avg_cost
-
-## API Plan
+## API
 
 Auth:
 
-- POST `/auth/register`
-- POST `/auth/login`
-- GET `/auth/me`
+- `POST /auth/register`
+- `POST /auth/login`
+- `GET /auth/me`
 
 Account:
 
-- POST `/account/deposit`
-- POST `/account/withdraw`
-- GET `/account/summary`
+- `POST /account/deposit`
+- `POST /account/withdraw`
+- `GET /account/summary`
 
 Market:
 
-- GET `/market/quote/{symbol}`
+- `GET /market/quote/{symbol}`
 
-Orders and portfolio:
+Trading:
 
-- POST `/orders/buy`
-- POST `/orders/sell`
-- GET `/portfolio`
-- GET `/trades`
+- `POST /orders/buy`
+- `POST /orders/sell`
+- `GET /portfolio`
+- `GET /trades`
 
-## Test Plan
+## Data Model
 
-Core backend behavior to test:
+- `users`: account credentials and cash balance
+- `transactions`: cash deposits and withdrawals
+- `trades`: executed buy/sell orders
+- `positions`: current holdings by user and symbol
 
-- deposit increases cash
-- withdraw decreases cash
-- users cannot over-withdraw
-- buy works when the user has enough cash
-- buy fails when the user does not have enough cash
-- sell works when the user owns enough shares
-- sell fails when the user does not own enough shares
+## Status
 
-Auth tests:
+The MVP is deployed and supports the main paper-trading flow end to end.
 
-- register creates a user
-- duplicate email is rejected
-- short password is rejected
-- login succeeds with valid credentials
-- login fails with a missing email
-- login fails with the wrong password
+Next improvements:
 
-## Build Order
-
-- [x] Create repository and local project structure
-- [x] Set up backend directory
-- [x] Set up FastAPI with `/health`
-- [x] Connect PostgreSQL through SQLAlchemy
-- [x] Add initial database models
-- [x] Implement `/auth/register`
-- [x] Add basic register tests
-- [x] Implement `/auth/login`
-- [x] Add basic login tests
-- [x] Add JWT access tokens
-- [x] Add `/auth/me`
-- [x] Implement deposit and withdraw endpoints
-- [x] Integrate market data API and quote endpoint
-- [x] Implement buy and sell endpoints
-- [x] Implement portfolio and trades endpoints
-- [x] Build frontend login/register flow
-- [x] Build dashboard and trading forms
-- [x] Add Redis quote caching
-- [ ] Dockerize local development
-- [ ] Deploy MVP
-
-## Notes
-
-The current focus is moving from MVP behavior into production-style polish. Some implementation details are intentionally simple for now and should be revisited later, especially password hashing, database migrations, environment-based configuration, Redis caching, Docker, and deployment.
+- bcrypt/passlib password hashing
+- Alembic migrations
+- login/register rate limiting
+- GitHub Actions CI
+- deployment hardening

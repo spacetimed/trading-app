@@ -1,12 +1,25 @@
-2026-05-28
+2026-05-31
 
 next
-    [ ] create Vercel project for frontend
-    [ ] create Render service for backend
-    [ ] create Supabase Postgres database
-    [ ] create Upstash Redis database
+    [ ] rotate deployment secrets before sharing the demo widely
+    [ ] add a small production notes section for cold starts and free-tier limits
+    [ ] add basic rate limiting for login/register endpoints
+    [ ] switch sha256 password hashing to bcrypt/passlib
+    [ ] add Alembic migrations for database schema changes
+    [ ] add GitHub Actions to run backend tests and frontend checks
 
 complete
+    [x] create Vercel project for frontend
+    [x] create Render service for backend
+    [x] create Supabase Postgres database
+    [x] create Upstash Redis database
+    [x] deploy frontend to Vercel
+    [x] deploy backend to Render
+    [x] connect deployed backend to Supabase Postgres
+    [x] connect deployed backend to Upstash Redis
+    [x] configure deployed frontend to call Render backend
+    [x] smoke test deployed login, deposit, quote, buy, portfolio, and trades
+    [x] add live demo URLs to README
     [x] add Vercel frontend origin to backend CORS config
     [x] document FRONTEND_ORIGIN environment variable
     [x] add backend Dockerfile
