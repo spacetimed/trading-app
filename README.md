@@ -9,6 +9,8 @@ Users can register, log in, deposit and withdraw cash, look up stock quotes, pla
 - Frontend: <https://trading-app-demo-spacetimed.vercel.app>
 - Backend health: <https://trading-app-backend-ulze.onrender.com/health>
 
+![Paper trading dashboard](./images/demo.png)
+
 The backend runs on Render's free tier, so the first request after inactivity can be slow.
 
 ## Stack
